@@ -37,10 +37,11 @@ impl Expr {
 
                 Ok(owner.insert(Data::Nil))
             },
-            Expr::Assingment(symbol, expr) => {
-                table.insert(symbol.clone(), expr.eval(owner, table)?);
+            Expr::Assingment(_, _) => {
+                //{ table.insert(symbol.clone(), expr.eval(owner, table)?); }
+                panic!("Shouldn't eval over a single assingment");
 
-                Ok(owner.insert(Data::Nil))
+                //Ok(owner.insert(Data::Nil))
             }
 
             Expr::CodeBlock(b) => { 
