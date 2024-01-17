@@ -1,0 +1,51 @@
+form = {
+    assingment_list
+  | export_list
+  | array_list
+  | function
+  | code_block
+  | call
+  | literal
+}
+
+literal = {
+    float
+  | integer
+  | char
+  | string
+  | bool
+  | nil
+  | atom
+  | symbol
+}
+
+keyword   = { bool | nil }
+operators = { "$" | "<(" | "#(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" }
+
+symbol = @{
+    !keyword ~ ('a'..'z' | 'A'..'Z' | "-") ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")*
+  | !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "(" | ")" | "-" | "+" | "=" | "'" | "`" | "[" | "]" | "{" | "}" | "~" | "^" | ":" | ">" | "<" | "." | "," | "|" | "\\" | "/" | "?")+
+}
+
+atom           = @{ "$" ~ ('a'..'z' | 'A'..'Z' | "-") ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
+float          = @{ ('0'..'9')* ~ "." ~ ('0'..'9')+ | ('0'..'9')+ ~ "." ~ ('0'..'9')* }
+integer        = @{ ('0'..'9')+ }
+string         = ${ "\"" ~ string_content ~ "\"" }
+string_content = @{ (!"\"" ~ ANY)* }
+char           = ${ "'" ~ char_content ~ "'" }
+char_content   = @{ (!"'" ~ ANY)? }
+bool           =  { "true" | "false" }
+nil            =  { "nil" }
+
+assingment_list = { "#(" ~ assingment* ~ ")" }
+export_list     = { "@(" ~ assingment* ~ ")" }
+assingment      = { symbol ~ form }
+
+array_list = { "[" ~ form* ~ "]" }
+
+function   = { "<(" ~ (symbol+ ~ ":")? ~ form+ ~ ")" }
+call       = { "(" ~ form+ ~ ")" }
+code_block = { "{" ~ form* ~ "}" }
+
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+COMMENT    = _{ ";" ~ (!";" ~ ANY)* ~ ";" | ";" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
