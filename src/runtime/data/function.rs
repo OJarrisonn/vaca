@@ -1,6 +1,6 @@
 use std::{rc::Weak, iter::zip};
 
-use crate::{symbol::Symbol, Expr, Data, Owner, SymbolTable};
+use crate::{Symbol, Expr, Data, Owner, SymbolTable};
 
 #[derive(Debug)]
 pub struct Function {

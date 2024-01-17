@@ -34,12 +34,11 @@ impl SymbolTable {
         self.scopes.back_mut().unwrap().0.insert(symbol, value);
     }
 
-    pub fn lookup(&self, symbol: &Symbol) -> Option<Weak<Data>> {
+    pub fn lookup(&self, symbol: &Symbol) -> Result<Weak<Data>,String> {
         match self.scopes.iter()
             .rfind(|scope| scope.0.contains_key(symbol)) {
-                Some(scope) => Some(Weak::clone(scope.0.get(symbol)?)),
-                None => None,
+                Some(scope) => Ok(Weak::clone(scope.0.get(symbol).unwrap())),
+                None => Err(format!("Tried to lookup for undefined symbol `{symbol}`")),
             }
-            
     }
 }

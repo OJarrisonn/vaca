@@ -1,6 +1,6 @@
 use std::rc::Weak;
 
-use crate::{symbol::Symbol, Data, Owner, SymbolTable, Function};
+use crate::{Symbol, Data, Owner, SymbolTable, Function, extract};
 
 #[derive(Debug, Clone)]
 pub enum Expr {
@@ -66,13 +66,13 @@ impl Expr {
 
                 match func {
                     Err(e) => Err(e),
-                    Ok(func) => match func.upgrade().unwrap().as_ref() {
+                    Ok(func) => match extract!(func).as_ref() {
                         Data::Function(f) => {
                             let args = Expr::Array(args.clone()).eval(owner, table);
 
                             match args {
                                 Err(e) => Err(e),
-                                Ok(args) => f.exec(args.upgrade().unwrap().as_ref().as_vec(), owner, table)
+                                Ok(args) => f.exec(extract!(args).as_vec(), owner, table)
                             }
                         },
                         d => Err(format!("Trying call over on functional value {}", d))
@@ -111,14 +111,7 @@ impl Literal {
             Literal::Char(c) => owner.insert(Data::Char(*c)),
             Literal::String(s) => owner.insert(Data::String(s.clone())),
             Literal::Bool(b) => owner.insert(Data::Bool(*b)),
-            Literal::Symbol(s) => {
-                let v = table.lookup(s);
-                if let None = v {
-                    return Err(format!("Undefined symbol {}", s));
-                } else {
-                    v.unwrap()
-                }
-            },
+            Literal::Symbol(s) => table.lookup(s)?,
         };
 
         Ok(data)
