@@ -72,22 +72,78 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Expr, String>{
             }
         },
         // TODO: complete this
-        Rule::array_list => todo!(),
-        Rule::function => todo!(),
-        Rule::call => todo!(),
-        Rule::code_block => todo!(),
+        Rule::array_list => {
+            let res =  pair.into_inner()
+                .map(|pair| pair_walk(pair))
+                .fold(Ok(vec![]), |acc, r| {
+                    match acc {
+                        Ok(mut acc) => match r {
+                            Ok(r) => {acc.push(r); Ok(acc)},
+                            Err(e) => Err(e),
+                        },
+                        Err(e) => Err(e),
+                    }
+                });
+            
+            match res {
+                Ok(list) => Ok(Expr::Array(list)),
+                Err(e) => Err(e),
+            }
+        },
+        Rule::function => {
+            let mut params = vec![];
+            let mut body = vec![];
+
+            for p in pair.into_inner() {
+                match p.as_rule() {
+                    Rule::symbol => params.push(p.as_str().into()),
+                    Rule::form => body.push(pair_walk(p)?),
+                    _ => panic!("No other rule should be inside a function rule")
+                }
+            }
+
+            let body = Expr::CodeBlock(body);
+
+            Ok(Expr::Function(params, Box::new(body)))
+        },
+        Rule::call => {
+            let res = pair.into_inner()
+                .map(|pair| pair_walk(pair));
+
+            // TODO: Remove find
+            if let Some(err) = res.clone().into_iter().find(|r| r.is_err()) {
+                err
+            } else {
+                let mut iter = res.map(|e| e.unwrap());
+                let func = iter.next().expect("There should be a first expression in the function");
+
+                match &func {
+                    Expr::Function(_, _) | Expr::CodeBlock(_) | Expr::Literal(Literal::Symbol(_)) | Expr::Call(_, _) => Ok(Expr::Call(Box::new(func), iter.collect())),
+                    e => Err(format!("Passing {e:?} as a callable function, but it isn't"))
+                }
+            }
+        },
+        Rule::code_block => {
+            let res = pair.into_inner()
+                .map(|pair| pair_walk(pair));
+            
+                // TODO: Remove find
+                if let Some(err) = res.clone().into_iter().find(|r| r.is_err()) {
+                    err
+                } else {
+                    Ok(Expr::CodeBlock(res.map(|e| e.unwrap()).collect()))
+                }
+        },
     }
 }
 
 mod tests {
     use std::fs;
 
-    use pest::Parser;
-
-    use super::{parse, VacaParser, Rule};
+    use super::parse;
 
     #[test]
     fn crude_parse() {
-        let _ = dbg!(VacaParser::parse(Rule::form, &(format!("{{{}}}", fs::read_to_string("./tests/assingments.vaca").unwrap()))));
+        let _ = dbg!(parse(format!("{{{}}}", fs::read_to_string("./tests/hello_world.vaca").unwrap())));
     }
 }
