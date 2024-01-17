@@ -1,30 +1,30 @@
 form = {
-    assingment_list
-  | export_list
-  | array_list
-  | function
-  | code_block
-  | call
-  | literal
+  assingment_list
+| export_list
+| array_list
+| function
+| code_block
+| call
+| literal
 }
 
 literal = {
-    float
-  | integer
-  | char
-  | string
-  | bool
-  | nil
-  | atom
-  | symbol
+  float
+| integer
+| char
+| string
+| bool
+| nil
+| atom
+| symbol
 }
 
 keyword   = { bool | nil }
-operators = { "$" | "<(" | "#(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" }
+operators = { "$" | "<(" | "#(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
 
 symbol = @{
-    !keyword ~ ('a'..'z' | 'A'..'Z' | "-") ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")*
-  | !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "(" | ")" | "-" | "+" | "=" | "'" | "`" | "[" | "]" | "{" | "}" | "~" | "^" | ":" | ">" | "<" | "." | "," | "|" | "\\" | "/" | "?")+
+  !keyword ~ ('a'..'z' | 'A'..'Z' | "-") ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")*
+| !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "(" | ")" | "-" | "+" | "=" | "'" | "`" | "[" | "]" | "{" | "}" | "~" | "^" | ":" | ">" | "<" | "." | "," | "|" | "\\" | "/" | "?")+
 }
 
 atom           = @{ "$" ~ ('a'..'z' | 'A'..'Z' | "-") ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
@@ -43,7 +43,7 @@ assingment      = { symbol ~ form }
 
 array_list = { "[" ~ form* ~ "]" }
 
-function   = { "<(" ~ (symbol+ ~ ":")? ~ form+ ~ ")" }
+function   = { "<(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form+ ~ ")" }
 call       = { "(" ~ form+ ~ ")" }
 code_block = { "{" ~ form* ~ "}" }
 
