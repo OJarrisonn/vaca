@@ -12,5 +12,5 @@ pub fn print(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, S
         d => print!("{}", d)
     };
 
-    Ok(owner.insert(Data::Nil))
+    Ok(owner.allocate(Data::Nil))
 }

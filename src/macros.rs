@@ -25,7 +25,7 @@ macro_rules! register {
     ($owner:expr, $table:expr, $symbol:expr, $data:expr) => {
         $table.insert(
             symbol!($symbol),
-            $owner.insert($data)
+            $owner.allocate($data)
         )
     };
 }

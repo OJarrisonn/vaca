@@ -16,7 +16,7 @@ fn generic(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(&f64, &f64) ->
         (_, _) => return Err(format!("Arguments for `a` and `b` should be numeric values not {a} and {b}"))
     };
 
-    Ok(owner.insert(res))
+    Ok(owner.allocate(res))
 }
 
 pub fn sum(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {

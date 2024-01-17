@@ -48,12 +48,12 @@ mod tests {
         let mut owner = Owner::new();
         
         owner.create_scope(); 
-        let a1 = owner.insert(Data::Bool(true));
-        let a2 = owner.insert(Data::Integer(91));
-    let a3 = owner.insert(Data::String(String::from("Jorge")));
-    let a4 = owner.insert(Data::Char('b'));
+        let a1 = owner.allocate(Data::Bool(true));
+        let a2 = owner.allocate(Data::Integer(91));
+    let a3 = owner.allocate(Data::String(String::from("Jorge")));
+    let a4 = owner.allocate(Data::Char('b'));
     
-    let array = owner.insert(Data::Array(vec![
+    let array = owner.allocate(Data::Array(vec![
         a1, a2, a3, a4
         ]));
         

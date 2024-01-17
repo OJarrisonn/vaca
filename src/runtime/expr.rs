@@ -34,7 +34,7 @@ impl Expr {
                     table.insert(s.clone(), v);
                 }
 
-                Ok(owner.insert(Data::Nil))
+                Ok(owner.allocate(Data::Nil))
             },
             Expr::Assingment(_, _) => {
                 //{ table.insert(symbol.clone(), expr.eval(owner, table)?); }
@@ -50,7 +50,7 @@ impl Expr {
                 let mut res = b.iter()
                 .map(|e| e.eval(owner, table))
                 .reduce(|acc, r| if acc.is_err() { acc } else { r })
-                .unwrap_or(Ok(owner.insert(Data::Nil)));
+                .unwrap_or(Ok(owner.allocate(Data::Nil)));
             
                 if let Ok(d) = res {
                     res = Ok(owner.insert_return(d));
@@ -63,7 +63,7 @@ impl Expr {
             },
 
             Expr::Function(params, body) => Ok(
-                owner.insert(
+                owner.allocate(
                     Data::Function(
                         Function::new(params.clone(), 
                                       (**body).clone())))
@@ -102,7 +102,7 @@ impl Expr {
 
                 match res {
                     Err(e) => Err(e),
-                    Ok(d) => Ok(owner.insert(Data::Array(d))),
+                    Ok(d) => Ok(owner.allocate(Data::Array(d))),
                 }
             },
             Expr::Literal(l) => l.eval(owner, table),
@@ -113,12 +113,12 @@ impl Expr {
 impl Literal {
     pub fn eval(&self, owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
         let data = match self {
-            Literal::Nil => owner.insert(Data::Nil),
-            Literal::Integer(i) => owner.insert(Data::Integer(*i)),
-            Literal::Float(f) => owner.insert(Data::Float(*f)),
-            Literal::Char(c) => owner.insert(Data::Char(*c)),
-            Literal::String(s) => owner.insert(Data::String(s.clone())),
-            Literal::Bool(b) => owner.insert(Data::Bool(*b)),
+            Literal::Nil => owner.allocate(Data::Nil),
+            Literal::Integer(i) => owner.allocate(Data::Integer(*i)),
+            Literal::Float(f) => owner.allocate(Data::Float(*f)),
+            Literal::Char(c) => owner.allocate(Data::Char(*c)),
+            Literal::String(s) => owner.allocate(Data::String(s.clone())),
+            Literal::Bool(b) => owner.allocate(Data::Bool(*b)),
             Literal::Symbol(s) => table.lookup(s)?,
         };
 
