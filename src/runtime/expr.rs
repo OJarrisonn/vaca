@@ -1,8 +1,6 @@
 use std::rc::Weak;
 
-use crate::{Symbol, Data, Owner, SymbolTable, Function, extract};
-
-use super::symbol;
+use crate::{extract, runtime::{data::{Data, owner::Owner, function::Function, symbol_table::SymbolTable}, symbol::Symbol}};
 
 #[derive(Debug, Clone)]
 pub enum Expr {

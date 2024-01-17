@@ -1,13 +1,15 @@
 mod stl;
 mod parser;
 mod runtime;
+
 #[macro_use]
 mod macros;
 
 use std::io::Write;
 
 use crate::parser::parse;
-pub use crate::runtime::{data::{Data, owner::Owner, function::Function, symbol_table::SymbolTable}, expr::{Expr, Literal}, symbol::Symbol};
+use crate::runtime::{data::{Data, owner::Owner, function::Function, symbol_table::SymbolTable}, expr::{Expr, Literal}, symbol::Symbol};
+//use crate::runtime::data::{owner::Owner, symbol_table::SymbolTable, function::Function, symbol::Symbol, Data};
 
 fn main() {
     let mut owner = Owner::new();

@@ -1,6 +1,6 @@
 use std::rc::Weak;
 
-use crate::{Owner, SymbolTable, Data, Symbol, lookup, extract};
+use crate::{lookup, extract, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable}, symbol::Symbol}};
 
 pub mod math;
 pub mod io;

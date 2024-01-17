@@ -1,6 +1,6 @@
 use std::rc::Weak;
 
-use crate::{lookup, extract, Owner, SymbolTable, Data, Symbol};
+use crate::{lookup, extract, runtime::{data::{owner::Owner, symbol_table::SymbolTable, Data}, symbol::Symbol}};
 
 pub fn print(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let text = lookup!(table, "text");

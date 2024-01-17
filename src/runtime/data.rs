@@ -40,7 +40,7 @@ impl Data {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Owner, Data, Function, Symbol};
+    use crate::runtime::data::{owner::Owner, Data};
 
 
     #[test]

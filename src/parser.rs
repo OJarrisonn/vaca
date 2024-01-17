@@ -1,7 +1,7 @@
 use pest::{Parser, iterators::Pair};
 use pest_derive::Parser;
 
-use crate::{Expr, Literal, Symbol, runtime::symbol};
+use crate::{Expr, Literal, Symbol};
 
 #[derive(Parser)]
 #[grammar = "./parser/grammar.pest"]
@@ -137,6 +137,7 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Expr, String>{
     }
 }
 
+#[cfg(tests)]
 mod tests {
     use std::fs;
 

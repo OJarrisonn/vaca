@@ -1,6 +1,6 @@
 use std::rc::Weak;
 
-use crate::{Data, Owner, SymbolTable, Symbol, lookup, extract};
+use crate::{lookup, extract, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable}, symbol::Symbol}};
 
 fn generic(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(&f64, &f64) -> f64) -> Result<Weak<Data>, String> {
     let a = lookup!(table, "a");
