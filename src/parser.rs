@@ -19,10 +19,10 @@ pub fn parse(form: String) -> Result<Expr, String>{
 fn pair_walk(pair: Pair<'_, Rule>) -> Result<Expr, String>{
     match pair.as_rule() {
         // Unreachble
-        Rule::keyword => todo!(),
-        Rule::operators => todo!(),
-        Rule::WHITESPACE => todo!(),
-        Rule::COMMENT => todo!(),
+        Rule::keyword => unreachable!(),
+        Rule::operators => unreachable!(),
+        Rule::WHITESPACE => unreachable!(),
+        Rule::COMMENT => unreachable!(),
         Rule::atom => todo!(),
         // Direct recursion
         Rule::form => pair_walk(pair.into_inner().next().unwrap()),
@@ -33,7 +33,9 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Expr, String>{
         Rule::symbol => Ok(Expr::Literal(Literal::Symbol(Symbol::from(pair.as_str())))),
         Rule::float => Ok(Expr::Literal(Literal::Float(pair.as_str().parse().unwrap()))),
         Rule::integer => Ok(Expr::Literal(Literal::Integer(pair.as_str().parse().unwrap()))),
-        Rule::string_content => Ok(Expr::Literal(Literal::String(pair.as_str().to_string()))),
+        
+        Rule::string_content => Ok(Expr::Literal(Literal::String(pair.as_str().to_string().replace("\\n", "\n").replace("\\r", "\r")))),
+
         Rule::char_content => Ok(Expr::Literal(Literal::Char(pair.as_str().chars().next().unwrap_or('\0')))),
         Rule::bool => Ok(Expr::Literal(Literal::Bool(pair.as_str() == "true"))),
         Rule::nil => Ok(Expr::Literal(Literal::Nil)),
@@ -71,7 +73,6 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Expr, String>{
                 Ok(expr) => Ok(Expr::Assingment(symbol, Box::new(expr))),
             }
         },
-        // TODO: complete this
         Rule::array_list => {
             let res =  pair.into_inner()
                 .map(|pair| pair_walk(pair))
