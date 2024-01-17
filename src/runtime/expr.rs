@@ -1,8 +1,9 @@
 use std::rc::Weak;
-
+use speedy::{Readable, Writable};
 use crate::{extract, runtime::{data::{Data, owner::Owner, function::Function, symbol_table::SymbolTable}, symbol::Symbol}};
 
-#[derive(Debug, Clone)]
+
+#[derive(Debug, Clone, Readable, Writable)]
 pub enum Expr {
     AssingmentList(Vec<(Symbol, Expr)>),
     Assingment(Symbol, Box<Expr>),
@@ -13,7 +14,7 @@ pub enum Expr {
     Literal(Literal)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Readable, Writable)]
 pub enum Literal {
     Nil,
     Integer(i64),

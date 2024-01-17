@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+use speedy::{Writable, Readable};
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Readable, Writable)]
 pub struct Symbol(String);
 
 impl From<&'_ str> for Symbol {
