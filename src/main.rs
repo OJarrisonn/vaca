@@ -8,8 +8,9 @@ mod macros;
 use std::io::Write;
 
 use crate::parser::parse;
-use crate::runtime::{data::{Data, owner::Owner, function::Function, symbol_table::SymbolTable}, expr::{Expr, Literal}, symbol::Symbol};
-//use crate::runtime::data::{owner::Owner, symbol_table::SymbolTable, function::Function, symbol::Symbol, Data};
+use crate::runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable}, expr::{Expr, Literal}, symbol::Symbol};
+
+
 
 fn main() {
     let mut owner = Owner::new();
@@ -18,13 +19,15 @@ fn main() {
     owner.create_scope();
     table.create_scope();
 
-    register!(owner, table, "pi", Data::Float(3.1415926));
-    register!(owner, table, "+", function!(stl::math::sum, "a", "b"));
-    register!(owner, table, "-", function!(stl::math::sub, "a", "b"));
-    register!(owner, table, "*", function!(stl::math::mul, "a", "b"));
-    register!(owner, table, "/", function!(stl::math::div, "a", "b"));
-    register!(owner, table, "print", function!(stl::io::print, "text"));
+    stl::load(&mut owner, &mut table);
 
+    
+
+    table.drop_scope();
+    owner.drop_scope();
+}
+
+fn repl(owner: &mut Owner, table: &mut SymbolTable) {
     loop {
         let mut input = String::new();
 
@@ -35,15 +38,17 @@ fn main() {
         if input.trim() == "." { break; }
 
         let program = parse(input).unwrap();
-        let res = program.eval(&mut owner, &mut table);
+        let res = program.eval(owner, table);
 
         dbg!(res.unwrap().upgrade());
         println!("");
-
     }
+}
 
+fn compiler(owner: &mut Owner, table: &mut SymbolTable, filename: &str) {
 
+}
 
-    table.drop_scope();
-    owner.drop_scope();
+fn runner(owner: &mut Owner, table: &mut SymbolTable, filename: &str) {
+
 }
