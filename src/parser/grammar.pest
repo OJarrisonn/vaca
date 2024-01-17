@@ -30,10 +30,19 @@ symbol = @{
 atom           = @{ "$" ~ ('a'..'z' | 'A'..'Z' | "-") ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
 float          = @{ ('0'..'9')* ~ "." ~ ('0'..'9')+ | ('0'..'9')+ ~ "." ~ ('0'..'9')* }
 integer        = @{ ('0'..'9')+ }
+
 string         = ${ "\"" ~ string_content ~ "\"" }
-string_content = @{ (!"\"" ~ ANY)* }
+//string_content = @{ (!"\"" ~ ANY)* }
+string_content = @{ char_content* }
+
 char           = ${ "'" ~ char_content ~ "'" }
-char_content   = @{ (!"'" ~ ANY)? }
+//char_content   = @{ (!"'" ~ ANY)? }
+char_content = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+
 bool           =  { "true" | "false" }
 nil            =  { "nil" }
 
