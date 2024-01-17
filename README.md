@@ -1,14 +1,14 @@
 # Vaca
 
-Vaca is an interpreted purely functional programming language using a lisp-like syntax
+Vaca is an interpreted functional programming language using a lisp-like syntax
 
 ## Features
 
 - No side effects
 - High order functions: functions are treated as values
-- Partial resolution: if you don't pass enough arguments to a function then the function returns another function as the result
+- TODO: Partial resolution: if you don't pass enough arguments to a function then the function returns another function as the result
 - Ownership: values have owners, once their owner goes out of scope the value is freed
-- Assinments: values can be assined to names inside a scope
+- Assingments: values can be assined to names inside a scope
 
 ## Syntax
 
@@ -31,7 +31,7 @@ Each expression is evaluated and the last one is returned as the value of the bl
 ### Functions and Calls
 
 ```lisp
-<(arg arg arg ... expr )
+<(arg arg arg ... -> expr expr expr )
 ```
 
 This creates a function that receives some arguments and return the evaluated expression
