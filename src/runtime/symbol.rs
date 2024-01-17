@@ -3,8 +3,8 @@ use std::fmt::Display;
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Symbol(String);
 
-impl From<&'static str> for Symbol {
-    fn from(value: &'static str) -> Self {
+impl From<&'_ str> for Symbol {
+    fn from(value: &'_ str) -> Self {
         Self(String::from(value))
     }
 }
