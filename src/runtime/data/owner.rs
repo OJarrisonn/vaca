@@ -53,9 +53,14 @@ impl Owner {
         self.scopes.pop_back();
     }
 
-    pub fn insert(&mut self, data: Data) -> Weak<Data> {
+    pub fn allocate(&mut self, data: Data) -> Weak<Data> {
         { self.scopes.back_mut().unwrap().0.push(Rc::new(data)); }
 
+        Rc::downgrade(self.scopes.back().unwrap().0.last().unwrap())
+    }
+
+    pub fn relocate(&mut self, data: Rc<Data>) -> Weak<Data> {
+        { self.scopes.back_mut().unwrap().0.push(data); }
         Rc::downgrade(self.scopes.back().unwrap().0.last().unwrap())
     }
 
