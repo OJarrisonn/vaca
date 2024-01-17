@@ -4,6 +4,9 @@ mod runtime;
 #[macro_use]
 mod macros;
 
+use std::io::Write;
+
+use crate::parser::parse;
 pub use crate::runtime::{data::{Data, owner::Owner, function::Function, symbol_table::SymbolTable}, expr::{Expr, Literal}, symbol::Symbol};
 
 fn main() {
@@ -18,12 +21,26 @@ fn main() {
     register!(owner, table, "-", function!(stl::math::sub, "a", "b"));
     register!(owner, table, "*", function!(stl::math::mul, "a", "b"));
     register!(owner, table, "/", function!(stl::math::div, "a", "b"));
+    register!(owner, table, "print", function!(stl::io::print, "text"));
 
-    let call = Expr::Call(Box::new(Expr::Literal(Literal::Symbol(symbol!("=")))), vec![Expr::Literal(Literal::Integer(1)), Expr::Literal(Literal::Symbol(symbol!("pi")))]);
+    loop {
+        let mut input = String::new();
 
-    dbg!(call.eval(&mut owner, &mut table).unwrap().upgrade());
+        print!(">> ");
+        let _ = std::io::stdout().flush();
+        let _ = std::io::stdin().read_line(&mut input);
 
-    dbg!(table.lookup(&symbol!("pi")).unwrap().upgrade());
+        if input.trim() == "." { break; }
+
+        let program = parse(input).unwrap();
+        let res = program.eval(&mut owner, &mut table);
+
+        dbg!(res.unwrap().upgrade());
+        println!("");
+
+    }
+
+
 
     table.drop_scope();
     owner.drop_scope();
