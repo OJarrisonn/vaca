@@ -57,3 +57,19 @@ This creates an array
 #(name (read)) ; Reads more input from the keyboard
 (print ["Nice to meet you " name "!"]) ; Prints it back
 ```
+
+## TODO
+
+[ ] STL
+- [ ] println function
+- [ ] readln function
+- [ ] read function
+- [ ] math lib
+- [ ] array lib
+    - [ ] map
+- [ ] string lib
+- [ ] logic lib
+    - [ ] if
+[ ] Loops
+[ ] Error Callstack
+[ ] Partial resolution
