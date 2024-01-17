@@ -3,6 +3,7 @@ use std::rc::Weak;
 use crate::{Owner, SymbolTable, Data, Symbol, lookup, extract};
 
 pub mod math;
+pub mod io;
 
 pub fn _eval(_owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let expr = lookup!(table, "expr");
