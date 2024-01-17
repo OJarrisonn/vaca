@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let res = match &cli.command {
         cli::Commands::Repl => repl(&mut owner, &mut table),
         cli::Commands::Run(RunArgs { file: filename }) => runner(&mut owner, &mut table, filename),
-        cli::Commands::Build(BuildArgs { input, output}) => compiler(&mut owner, &mut table, input, output)
+        cli::Commands::Build(BuildArgs { input, output}) => compiler(input, output)
     };
 
     table.drop_scope();
@@ -59,7 +59,7 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable) -> Result<(), Box<dyn std::e
     Ok(())
 }
 
-fn compiler(owner: &mut Owner, table: &mut SymbolTable, input: &str, output: &Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+fn compiler(input: &str, output: &Option<String>) -> Result<(), Box<dyn std::error::Error>> {
     if input.ends_with(".leite") {
         return Err(Box::new(GenericError(format!("{} is already a *.leite file, there's no need to compile it", input))));
     } else if !input.ends_with(".vaca") {
@@ -67,7 +67,7 @@ fn compiler(owner: &mut Owner, table: &mut SymbolTable, input: &str, output: &Op
     }
 
     let source = fs::read_to_string(input)?;
-    let compiled = parse(source);
+    let compiled = parse(format!("{{{}}}", source));
 
     match compiled {
         Ok(compiled) => todo!(),
