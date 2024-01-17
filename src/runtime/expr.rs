@@ -2,9 +2,12 @@ use std::rc::Weak;
 
 use crate::{Symbol, Data, Owner, SymbolTable, Function, extract};
 
+use super::symbol;
+
 #[derive(Debug, Clone)]
 pub enum Expr {
-    Assingment(Vec<(Symbol, Expr)>),
+    AssingmentList(Vec<(Symbol, Expr)>),
+    Assingment(Symbol, Box<Expr>),
     CodeBlock(Vec<Expr>),
     Function(Vec<Symbol>, Box<Expr>),
     Call(Box<Expr>, Vec<Expr>),
@@ -26,7 +29,7 @@ pub enum Literal {
 impl Expr {
     pub fn eval(&self, owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
         match self {
-            Expr::Assingment(pairs) => {
+            Expr::AssingmentList(pairs) => {
                 for (s, e) in pairs {
                     let v = e.eval(owner, table)?;
                     table.insert(s.clone(), v);
@@ -34,6 +37,11 @@ impl Expr {
 
                 Ok(owner.insert(Data::Nil))
             },
+            Expr::Assingment(symbol, expr) => {
+                table.insert(symbol.clone(), expr.eval(owner, table)?);
+
+                Ok(owner.insert(Data::Nil))
+            }
 
             Expr::CodeBlock(b) => { 
                 owner.create_scope();
