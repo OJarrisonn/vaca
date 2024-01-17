@@ -4,6 +4,7 @@ use crate::{lookup, extract, register, function, symbol, runtime::{data::{Data, 
 
 pub mod math;
 pub mod io;
+pub mod logic;
 
 pub fn _eval(_owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let expr = lookup!(table, "expr");
@@ -21,4 +22,5 @@ pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
     register!(owner, table, "*", function!(math::mul, "a", "b"));
     register!(owner, table, "/", function!(math::div, "a", "b"));
     register!(owner, table, "print", function!(io::print, "text"));
+    register!(owner, table, "if", function!(logic::iff, "cond", "truth", "fake"))
 }
