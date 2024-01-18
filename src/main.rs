@@ -7,21 +7,34 @@ mod cli;
 mod macros;
 
 use std::fs;
-use std::io::Write;
 
 use clap::Parser;
-use cli::{Cli, RunArgs, BuildArgs};
+use cli::{Cli, RunArgs, BuildArgs, Settings};
+use envconfig::Envconfig;
 use runtime::error::GenericError;
+use rustyline::config::Configurer;
+use rustyline::DefaultEditor;
 use speedy::{Writable, Readable};
 
 use crate::parser::parse;
 use crate::runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable}, expr::{Expr, Literal}, symbol::Symbol};
 
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     let mut owner = Owner::new();
     let mut table = SymbolTable::new();
+
+    match std::env::var("VACA_HOME") {
+        Ok(_) => {},
+        Err(_) => {
+            let vaca_home = format!("{}/.vaca", std::env::var("HOME").unwrap());
+            std::env::set_var("VACA_HOME", &vaca_home);
+        },
+    };
+
+    let settings = Settings::init_from_env()?;
+
+    dbg!(&settings);
 
     owner.create_scope();
     table.create_scope();
@@ -30,11 +43,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let res = match cli.command {
         Some(cmd) => match cmd {
-            cli::Commands::Repl => repl(&mut owner, &mut table),
+            cli::Commands::Repl => repl(&mut owner, &mut table, &settings),
             cli::Commands::Run(RunArgs { file: filename }) => runner(&mut owner, &mut table, filename),
             cli::Commands::Build(BuildArgs { input, output}) => compiler(input, output)    
         },
-        None => repl(&mut owner, &mut table)
+        None => repl(&mut owner, &mut table, &settings)
     };
 
     table.drop_scope();
@@ -43,15 +56,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     res
 }
 
-fn repl(owner: &mut Owner, table: &mut SymbolTable) -> Result<(), Box<dyn std::error::Error>> {
-    loop {
-        let mut input = String::new();
+fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
+    let mut res: Result<(), Box<dyn std::error::Error>> = Ok(());
 
-        print!(">>> ");
-        let _ = std::io::stdout().flush();
-        let _ = std::io::stdin().read_line(&mut input);
+    let _ = fs::create_dir(&settings.vaca_home);
+
+    let mut editor = DefaultEditor::new()?;
+    editor.set_max_history_size(settings.repl_history_len)?;
+    editor.set_auto_add_history(true);
+    let _ = editor.load_history(&format!("{}/repl_history.txt", settings.vaca_home));
+
+    // TODO History navigation
+
+
+    println!("Vaca v0.2.0 REPL");
+    println!("vaca help - in the command line for the help screen");
+    println!("; - to exit the repl");
+
+    loop {
+        let input = editor.readline(">>> ");
+
+        let input = match input {
+            Ok(input) => input,
+            Err(e) => match e {
+                rustyline::error::ReadlineError::Io(io) => { eprintln!("{}", io); continue },
+                rustyline::error::ReadlineError::Eof => break,
+                rustyline::error::ReadlineError::Interrupted => break,
+                rustyline::error::ReadlineError::Errno(n) => { res = Err(Box::new(n)); break },
+                rustyline::error::ReadlineError::WindowResized => continue,
+                e => { res = Err(Box::new(e)); break},
+            }
+        };
 
         if input.trim() == ";" { break; }
+        if input.trim() == ";clear" { let _ = editor.clear_screen()?; continue }
+        if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s} \t=> \t{v}")); continue }
         if input.trim() == "" { continue; }
 
         let program = match parse(input) {
@@ -65,7 +104,7 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable) -> Result<(), Box<dyn std::e
         match program.eval(owner, table) {
             Ok(v) => match v.upgrade() { 
                 Some(v) => match v.as_ref() {    
-                    Data::Nil => {},
+                    Data::Nil => println!(""),
                     d => println!("$>> {d}")
                 },
                 None => return Err(Box::new(GenericError(format!("A form returned a value that got freed"))))
@@ -74,7 +113,9 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable) -> Result<(), Box<dyn std::e
         }
     }
 
-    Ok(())
+    editor.save_history(&format!("{}/repl_history.txt", &settings.vaca_home))?;
+
+    res
 }
 
 fn compiler(input: String, output: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
