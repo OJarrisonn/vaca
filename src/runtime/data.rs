@@ -62,12 +62,12 @@ impl Display for Data {
             Self::Char(c) => format!("{c}"),
             Self::Integer(i) => format!("{i}"),
             Self::Float(f) => format!("{f}"),
-            Self::Array(a) => format!("[{}]", a.iter()
-                .map(|w| format!("{}, ", match w.upgrade() {
+            Self::Array(a) => format!("[ {}]", a.iter()
+                .map(|w| format!("{} ", match w.upgrade() {
                     Some(d) => format!("{d}"),
                     None => format!("'undefined")
                 }))
-                .reduce(|f, acc| format!("{acc}{f}"))
+                .reduce(|acc, f| format!("{acc}{f}"))
                 .unwrap_or(String::from(""))
             ),
             Self::Function(f) => format!("'function\\{}", f.arity()),

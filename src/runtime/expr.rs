@@ -53,7 +53,7 @@ impl Expr {
                 .unwrap_or(Ok(owner.allocate(Data::Nil)));
             
                 if let Ok(d) = res {
-                    res = Ok(owner.insert_return(d));
+                    res = Ok(owner.allocate_return(d));
                 }
                 
                 table.drop_scope();

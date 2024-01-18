@@ -82,7 +82,6 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
                 rustyline::error::ReadlineError::Io(io) => { eprintln!("{}", io); continue },
                 rustyline::error::ReadlineError::Eof => break,
                 rustyline::error::ReadlineError::Interrupted => break,
-                rustyline::error::ReadlineError::Errno(n) => { res = Err(Box::new(n)); break },
                 rustyline::error::ReadlineError::WindowResized => continue,
                 e => { res = Err(Box::new(e)); break},
             }
@@ -90,7 +89,7 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
 
         if input.trim() == ";" { break; }
         if input.trim() == ";clear" { let _ = editor.clear_screen()?; continue }
-        if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s} \t=> \t{v}")); continue }
+        if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s}\t=> \t{v}")); continue }
         if input.trim() == "" { continue; }
 
         let program = match parse(input) {
