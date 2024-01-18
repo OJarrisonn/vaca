@@ -6,6 +6,7 @@ use crate::{Symbol, Expr, Data, Owner, SymbolTable};
 pub struct Function {
     arity: usize,
     params: Vec<Symbol>,
+    partials: Vec<Weak<Data>>,
     body: Option<Expr>,
     native: Option<NativeFunction>
 }
@@ -18,6 +19,7 @@ impl Function {
         Self {
             arity: params.len(), 
             params,
+            partials: vec![],
             body: Some(body),
             native: None
         }
@@ -27,6 +29,7 @@ impl Function {
         Self { 
             arity: params.len(), 
             params, 
+            partials: vec![],
             body: None, 
             native: Some(native) 
         }
@@ -36,10 +39,15 @@ impl Function {
         self.arity
     }
 
-    pub fn exec(&self, args: Vec<Weak<Data>>, owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-        if self.arity != args.len() {
-            return Err(format!("Missmatch on argument count, expected {}, got {}", self.arity, args.len()));
+    pub fn exec(&self, source_args: Vec<Weak<Data>>, owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+        if self.arity < source_args.len() {
+            return Err(format!("Missmatch on argument count, expected {}, got {}", self.arity, source_args.len()));
+        } else if self.arity > source_args.len() {
+            return Ok(owner.allocate(Data::Function(Function::partial(&self, source_args))));
         }
+
+        let mut args = self.partials.clone();
+        args.extend(source_args.into_iter());
         
         owner.create_scope();
         table.create_scope();
@@ -54,12 +62,20 @@ impl Function {
 
         let res = match res {
             Err(e) => Err(e),
-            Ok(d) => Ok(owner.insert_return(d)),
+            Ok(d) => Ok(owner.allocate_return(d)),
         };
 
         table.drop_scope();
         owner.drop_scope();
 
         return res;
+    }
+
+    pub fn partial(source: &Self, args: Vec<Weak<Data>>) -> Self {
+        let mut source = source.clone();
+        source.arity -= args.len();
+        source.partials.extend(args.into_iter());
+
+        source
     }
 }
