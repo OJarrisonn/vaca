@@ -38,12 +38,12 @@ impl Owner {
         Rc::downgrade(self.scopes.back().unwrap().0.last().unwrap())
     }
 
-    pub fn _relocate(&mut self, data: Rc<Data>) -> Weak<Data> {
+    pub fn relocate(&mut self, data: Rc<Data>) -> Weak<Data> {
         { self.scopes.back_mut().unwrap().0.push(data); }
         Rc::downgrade(self.scopes.back().unwrap().0.last().unwrap())
     }
 
-    pub fn insert_return(&mut self, data: Weak<Data>) -> Weak<Data> {
+    pub fn allocate_return(&mut self, data: Weak<Data>) -> Weak<Data> {
         let mut iter = self.scopes.iter_mut();
         
         if let Some(_) = iter.next_back() {
