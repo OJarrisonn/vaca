@@ -82,7 +82,6 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
                 rustyline::error::ReadlineError::Io(io) => { eprintln!("{}", io); continue },
                 rustyline::error::ReadlineError::Eof => break,
                 rustyline::error::ReadlineError::Interrupted => break,
-                rustyline::error::ReadlineError::Errno(n) => { res = Err(Box::new(n)); break },
                 rustyline::error::ReadlineError::WindowResized => continue,
                 e => { res = Err(Box::new(e)); break},
             }
