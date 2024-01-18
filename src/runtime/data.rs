@@ -1,4 +1,4 @@
-use std::rc::Weak;
+use std::{rc::Weak, iter::zip};
 
 use self::function::Function;
 
@@ -34,6 +34,44 @@ impl Data {
         match self {
             Self::Array(a) => a.clone(),
             d => panic!("Can't turn a {} into an array like", d)
+        }
+    }
+}
+
+impl PartialOrd for Data {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Self::Integer(l0), Self::Integer(r0)) => l0.partial_cmp(r0),
+            (Self::Integer(l0), Self::Float(r0)) => (*l0 as f64).partial_cmp(r0),
+            (Self::Float(l0), Self::Float(r0)) => l0.partial_cmp(r0),
+            (Self::Float(l0), Self::Integer(r0)) => l0.partial_cmp(&(*r0 as f64)),
+            (Self::Char(l0), Self::Char(r0)) => l0.partial_cmp(r0),
+            (Self::String(l0), Self::String(r0)) => l0.partial_cmp(r0),
+            _ => None
+        }
+    }
+}
+
+impl PartialEq for Data {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Nil, Self::Nil) => true,
+            (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
+            (Self::Integer(l0), Self::Integer(r0)) => l0 == r0,
+            (Self::Integer(l0), Self::Float(r0)) => *l0 as f64 == *r0,
+            (Self::Float(l0), Self::Float(r0)) => l0 == r0,
+            (Self::Float(l0), Self::Integer(r0)) => *l0 == *r0 as f64,
+            (Self::Char(l0), Self::Char(r0)) => l0 == r0,
+            (Self::String(l0), Self::String(r0)) => l0 == r0,
+            (Self::Array(l0), Self::Array(r0)) => {
+                if l0.len() != r0.len() {
+                    false
+                } else {
+                    zip(l0, r0).all(|(l, r)| l.upgrade() == r.upgrade())
+                }
+            },
+            (Self::Function(_), Self::Function(_)) => false,
+            _ => false//core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }
 }
