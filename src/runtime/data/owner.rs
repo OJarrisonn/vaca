@@ -10,27 +10,6 @@ pub struct Owner {
     scopes: LinkedList<OwnScope>
 }
 
-impl Display for Data {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            Self::Nil => format!("'nil"),
-            Self::Bool(b) => format!("{b}"),
-            Self::Char(c) => format!("{c}"),
-            Self::Integer(i) => format!("{i}"),
-            Self::Float(f) => format!("{f}"),
-            Self::Array(a) => format!("[{}]", a.iter()
-                .map(|w| format!("{}, ", match w.upgrade() {
-                    Some(d) => format!("{d}"),
-                    None => format!("'undefined")
-                }))
-                .reduce(|f, acc| format!("{acc}{f}"))
-                .unwrap_or(String::from(""))
-            ),
-            Self::Function(f) => format!("'function\\{}", f.arity()),
-            Self::String(s) => s.clone()
-        })
-    }
-}
 
 impl OwnScope {
     pub fn new() -> Self {
