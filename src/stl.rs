@@ -2,9 +2,10 @@ use std::rc::Weak;
 
 use crate::{lookup, extract, register, function, symbol, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable, function::Function}, symbol::Symbol}};
 
-pub mod math;
-pub mod io;
-pub mod logic;
+mod math;
+mod io;
+mod logic;
+mod array;
 
 pub fn _eval(_owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let expr = lookup!(table, "expr");
@@ -23,4 +24,5 @@ pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
     register!(owner, table, "/", function!(math::div, "a", "b"));
     io::load(owner, table);
     logic::load(owner, table);
+    array::load(owner, table);
 }
