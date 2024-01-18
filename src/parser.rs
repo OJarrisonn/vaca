@@ -111,7 +111,6 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Expr, String>{
             let res = pair.into_inner()
                 .map(|pair| pair_walk(pair));
 
-            // TODO: Remove find
             if let Some(err) = res.clone().into_iter().find(|r| r.is_err()) {
                 err
             } else {
@@ -128,12 +127,11 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Expr, String>{
             let res = pair.into_inner()
                 .map(|pair| pair_walk(pair));
             
-                // TODO: Remove find
-                if let Some(err) = res.clone().into_iter().find(|r| r.is_err()) {
-                    err
-                } else {
-                    Ok(Expr::CodeBlock(res.map(|e| e.unwrap()).collect()))
-                }
+            if let Some(err) = res.clone().into_iter().find(|r| r.is_err()) {
+                err
+            } else {
+                Ok(Expr::CodeBlock(res.map(|e| e.unwrap()).collect()))
+            }
         },
     }
 }
