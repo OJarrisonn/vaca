@@ -1,8 +1,9 @@
-use std::{rc::Weak, iter::zip};
+use std::{rc::Weak, iter::zip, fmt::Display};
 
-use self::function::Function;
+use self::{function::Function, macros::NativeMacro};
 
 pub mod function;
+pub mod macros;
 pub mod owner;
 pub mod symbol_table;
 
@@ -17,7 +18,8 @@ pub enum Data {
     Char(char),
     String(String),
     Array(Vec<Weak<Data>>),
-    Function(Function)
+    Function(Function),
+    Macro(NativeMacro)
 }
 
 impl Into<Vec<Weak<Data>>> for Data {
@@ -36,7 +38,45 @@ impl Data {
             d => panic!("Can't turn a {} into an array like", d)
         }
     }
+
+    pub fn as_boolean(&self) -> bool {
+        match self {
+            Data::Nil => false,
+            Data::Bool(b) => *b,
+            Data::Integer(i) => *i != 0,
+            Data::Float(f) => *f != 0.,
+            Data::Char(c) => *c != '\0',
+            Data::String(s) => s.len() != 0,
+            Data::Array(a) => a.len() != 0,
+            Data::Function(_) => false,
+            Data::Macro(_) => false,
+        }
+    }
 }
+
+impl Display for Data {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Nil => format!("'nil"),
+            Self::Bool(b) => format!("{b}"),
+            Self::Char(c) => format!("{c}"),
+            Self::Integer(i) => format!("{i}"),
+            Self::Float(f) => format!("{f}"),
+            Self::Array(a) => format!("[{}]", a.iter()
+                .map(|w| format!("{}, ", match w.upgrade() {
+                    Some(d) => format!("{d}"),
+                    None => format!("'undefined")
+                }))
+                .reduce(|f, acc| format!("{acc}{f}"))
+                .unwrap_or(String::from(""))
+            ),
+            Self::Function(f) => format!("'function\\{}", f.arity()),
+            Self::Macro(_) => format!("'macro"),
+            Self::String(s) => s.clone()
+        })
+    }
+}
+
 
 impl PartialOrd for Data {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
@@ -70,7 +110,6 @@ impl PartialEq for Data {
                     zip(l0, r0).all(|(l, r)| l.upgrade() == r.upgrade())
                 }
             },
-            (Self::Function(_), Self::Function(_)) => false,
             _ => false//core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }
