@@ -21,6 +21,6 @@ pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
     register!(owner, table, "-", function!(math::sub, "a", "b"));
     register!(owner, table, "*", function!(math::mul, "a", "b"));
     register!(owner, table, "/", function!(math::div, "a", "b"));
-    register!(owner, table, "print", function!(io::print, "text"));
+    io::load(owner, table);
     logic::load(owner, table);
 }
