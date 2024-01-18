@@ -9,7 +9,7 @@ use clap::{Args, Subcommand};
 pub struct Cli {
     /// The command to be run
     #[command(subcommand)]
-    pub command: Commands
+    pub command: Option<Commands>
 }
 
 #[derive(Debug, Subcommand)]
