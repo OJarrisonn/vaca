@@ -41,4 +41,16 @@ impl SymbolTable {
                 None => Err(format!("Tried to lookup for undefined symbol `{symbol}`")),
             }
     }
+
+    pub fn env(&self) -> Vec<(String, String)> {
+        let mut symbols = self.scopes.iter()
+            .map(|scope| scope.0.keys().collect::<Vec<&Symbol>>())
+            .reduce(|mut acc, keys| { acc.extend(keys.iter()); acc })
+            .unwrap_or(vec![]);
+
+        symbols.dedup();
+
+        symbols.iter().map(|symbol| (symbol.to_string(), self.lookup(symbol).unwrap().upgrade().unwrap().to_string())).collect()
+
+    }
 }
