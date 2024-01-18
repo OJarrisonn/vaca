@@ -76,16 +76,12 @@ impl Expr {
                     Err(e) => Err(e),
                     Ok(func) => match extract!(func).as_ref() {
                         Data::Function(f) => {
-                            let args = args.clone().into_iter()
-                                                                            .map(|arg| owner.allocate(Data::Lazy(arg)))
-                                                                            .collect();//Expr::Array(args.clone()).eval(owner, table);
+                            let args = Expr::Array(args.clone()).eval(owner, table);
 
-                            /*match args {
+                            match args {
                                 Err(e) => Err(e),
                                 Ok(args) => f.exec(extract!(args).as_vec(), owner, table)
-                            }*/
-
-                            f.exec(args, owner, table)
+                            }
                         },
                         d => Err(format!("Trying call over on functional value {}", d))
                     },
