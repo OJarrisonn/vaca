@@ -61,15 +61,10 @@ This creates an array
 ## TODO
 
 [ ] STL
-- [ ] println function
-- [ ] readln function
-- [ ] read function
 - [ ] math lib
 - [ ] array lib
-    - [ ] map
 - [ ] string lib
-- [ ] logic lib
-    - [ ] if
-[ ] Loops
 [ ] Error Callstack
 [ ] Partial resolution
+- [ ] _ to pass away arguments
+[ ] Library loading
