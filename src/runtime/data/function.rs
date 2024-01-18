@@ -2,7 +2,7 @@ use std::{rc::Weak, iter::zip};
 
 use crate::{Symbol, Expr, Data, Owner, SymbolTable};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Function {
     arity: usize,
     params: Vec<Symbol>,
