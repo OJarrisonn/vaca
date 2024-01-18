@@ -29,9 +29,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     stl::load(&mut owner, &mut table);
 
     let res = match cli.command {
-        cli::Commands::Repl => repl(&mut owner, &mut table),
-        cli::Commands::Run(RunArgs { file: filename }) => runner(&mut owner, &mut table, filename),
-        cli::Commands::Build(BuildArgs { input, output}) => compiler(input, output)
+        Some(cmd) => match cmd {
+            cli::Commands::Repl => repl(&mut owner, &mut table),
+            cli::Commands::Run(RunArgs { file: filename }) => runner(&mut owner, &mut table, filename),
+            cli::Commands::Build(BuildArgs { input, output}) => compiler(input, output)    
+        },
+        None => repl(&mut owner, &mut table)
     };
 
     table.drop_scope();
@@ -48,7 +51,8 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable) -> Result<(), Box<dyn std::e
         let _ = std::io::stdout().flush();
         let _ = std::io::stdin().read_line(&mut input);
 
-        if input.trim() == "." { break; }
+        if input.trim() == ";" { break; }
+        if input.trim() == "" { continue; }
 
         let program = match parse(input) {
             Ok(program) => program,
@@ -61,14 +65,13 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable) -> Result<(), Box<dyn std::e
         match program.eval(owner, table) {
             Ok(v) => match v.upgrade() { 
                 Some(v) => match v.as_ref() {    
-                    Data::Nil => println!(""),
+                    Data::Nil => {},
                     d => println!("$>> {d}")
                 },
                 None => return Err(Box::new(GenericError(format!("A form returned a value that got freed"))))
             },
             Err(e) => eprintln!("!>> {e}"),
         }
-
     }
 
     Ok(())
