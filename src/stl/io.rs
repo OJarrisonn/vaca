@@ -1,4 +1,4 @@
-use std::rc::Weak;
+use std::{rc::Weak, io::Write};
 
 use crate::{lookup, extract, runtime::{data::{owner::Owner, symbol_table::SymbolTable, Data}, symbol::Symbol}};
 
@@ -12,5 +12,7 @@ pub fn print(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, S
         d => print!("{}", d)
     };
 
+    let _ = std::io::stdout().flush();
+    
     Ok(owner.allocate(Data::Nil))
 }
