@@ -90,7 +90,7 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
 
         if input.trim() == ";" { break; }
         if input.trim() == ";clear" { let _ = editor.clear_screen()?; continue }
-        if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s} \t=> \t{v}")); continue }
+        if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s}\t=> \t{v}")); continue }
         if input.trim() == "" { continue; }
 
         let program = match parse(input) {
