@@ -34,8 +34,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let settings = Settings::init_from_env()?;
 
-    dbg!(&settings);
-
     owner.create_scope();
     table.create_scope();
 
