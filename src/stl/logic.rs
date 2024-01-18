@@ -1,9 +1,9 @@
 use std::rc::Weak;
 
-use crate::{lookup, extract, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable, function::Function}, symbol::Symbol}, register, function, symbol};
+use crate::{lookup, extract, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable, function::Function}, symbol::Symbol, expr::Expr}, register, function, symbol};
 
 pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
-    register!(owner, table, "if", function!(iff, "cond", "truth", "fake"));
+    register!(owner, table, "if", Data::Macro(if_macro));
     register!(owner, table, "==", function!(eq, "a", "b"));
     register!(owner, table, "!=", function!(neq, "a", "b"));
     register!(owner, table, "<", function!(lt, "a", "b"));
@@ -14,7 +14,22 @@ pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
     register!(owner, table, "|", function!(or, "a", "b"));
 }
 
-fn iff(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+fn if_macro(owner: &mut Owner, table: &mut SymbolTable, args: &Vec<Expr>) -> Result<Weak<Data>, String> {
+    if args.len() != 3 {
+        return Err(format!("Wrong argument count for if. Needed a condition, a truth expression and a fake expression"))
+    }
+    let cond = &args[0];
+    let truth = &args[1];
+    let fake = &args[2];
+
+    if extract!(cond.eval(owner, table)?).as_boolean() {
+        truth.eval(owner, table)
+    } else {
+        fake.eval(owner, table)
+    }
+}
+
+/*fn iff(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let cond = lookup!(table, "cond");
     let truth = lookup!(table, "truth");
     let fake = lookup!(table, "fake");
@@ -35,7 +50,7 @@ fn iff(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String>
     } else {
         Ok(owner.relocate(fake))
     }
-}
+}*/
 
 fn generic_rel(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(&Data, &Data) -> bool) -> Result<Weak<Data>, String> {
     let a = lookup!(table, "a");
