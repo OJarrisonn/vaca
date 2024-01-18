@@ -8,7 +8,7 @@ pub mod symbol_table;
 
 /// Vaca primitive data types, Data must be owned by the program Owner and it's weak references goes everywhere
 /// Once the scope where the data got created is destroyed, the data is freed
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Data {
     Nil,
     Bool(bool),

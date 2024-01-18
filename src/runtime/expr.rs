@@ -1,4 +1,4 @@
-use std::rc::Weak;
+use std::{rc::Weak, fmt::Display};
 use speedy::{Readable, Writable};
 use crate::{extract, runtime::{data::{Data, owner::Owner, function::Function, symbol_table::SymbolTable}, symbol::Symbol}};
 
@@ -76,12 +76,16 @@ impl Expr {
                     Err(e) => Err(e),
                     Ok(func) => match extract!(func).as_ref() {
                         Data::Function(f) => {
-                            let args = Expr::Array(args.clone()).eval(owner, table);
+                            let args = args.clone().into_iter()
+                                                                            .map(|arg| owner.allocate(Data::Lazy(arg)))
+                                                                            .collect();//Expr::Array(args.clone()).eval(owner, table);
 
-                            match args {
+                            /*match args {
                                 Err(e) => Err(e),
                                 Ok(args) => f.exec(extract!(args).as_vec(), owner, table)
-                            }
+                            }*/
+
+                            f.exec(args, owner, table)
                         },
                         d => Err(format!("Trying call over on functional value {}", d))
                     },
@@ -123,5 +127,71 @@ impl Literal {
         };
 
         Ok(data)
+    }
+}
+
+impl Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expr::AssingmentList(list) => {
+                write!(f, "#( ")?;
+                for (s, e) in list.iter() {
+                    write!(f, "{} {} ", s, e)?
+                }
+                write!(f, ")")
+            },
+            Expr::Assingment(_, _) => unreachable!(),
+            Expr::CodeBlock(block) => {
+                writeln!(f, "{{")?;
+                for e in block.iter() {
+                    writeln!(f, "\t{}", e)?
+                }
+                writeln!(f, "}}")
+            },
+            Expr::Function(args, body) => {
+                write!(f, "<( ")?;
+                
+                for s in args.iter() {
+                    write!(f, "{} ", s)?
+                }
+
+                if args.len() > 0 {
+                    write!(f, "-> ")?;
+                }
+
+                write!(f, "{} )", body)
+            },
+            Expr::Call(func, args) => {
+                write!(f, "( {func} ")?;
+                
+                for arg in args.iter() {
+                    write!(f, "{} ", arg)?;
+                }
+
+                write!(f, ")")
+            },
+            Expr::Array(arr) => {
+                write!(f, "[ ")?;
+                for e in arr.iter() {
+                    write!(f, "{} ", e)?
+                }
+                write!(f, "]")
+            },
+            Expr::Literal(l) => write!(f, "{}", l),
+        }
+    }
+}
+
+impl Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Nil => "nil".to_string(),
+            Self::Integer(i) => format!("{i}"),
+            Self::Float(f) => format!("{f}"),
+            Self::Char(c) => c.to_string(),
+            Self::String(s) => s.to_string(),
+            Self::Bool(b) => b.to_string(),
+            Self::Symbol(s) => s.to_string(),
+        })
     }
 }
