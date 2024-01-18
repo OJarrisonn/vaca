@@ -83,6 +83,9 @@ impl Expr {
                                 Ok(args) => f.exec(extract!(args).as_vec(), owner, table)
                             }
                         },
+                        Data::Macro(m) => {
+                            m(owner, table, args)
+                        }
                         d => Err(format!("Trying call over on functional value {}", d))
                     },
                 }
