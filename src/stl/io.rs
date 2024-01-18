@@ -38,7 +38,7 @@ pub fn println(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>,
     Ok(owner.allocate(Data::Nil))
 }
 
-pub fn readln(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+pub fn readln(owner: &mut Owner, _table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let mut line = String::new();
     
     let _ = std::io::stdin().read_line(&mut line);
