@@ -60,7 +60,7 @@ This creates an array
 
 ## TODO
 
-- [ ] Rename .leite to .casco
+- [x] Rename .leite to .casco
 - [ ] STL
     - [ ] math lib
     - [ ] array lib
