@@ -61,7 +61,7 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
 
     let mut editor = DefaultEditor::new()?;
     editor.set_max_history_size(settings.repl_history_len)?;
-    editor.set_auto_add_history(true);
+    //editor.set_auto_add_history(true);
     let _ = editor.load_history(&format!("{}/repl_history.txt", settings.vaca_home));
 
     // TODO History navigation
@@ -89,6 +89,8 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
         if input.trim() == ";clear" { let _ = editor.clear_screen()?; continue }
         if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s}\t=> \t{v}")); continue }
         if input.trim() == "" { continue; }
+
+        let _ = editor.add_history_entry(&input);
 
         let program = match parse(input) {
             Ok(program) => program,
