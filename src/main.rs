@@ -67,7 +67,7 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
     // TODO History navigation
 
 
-    println!("Vaca v0.2.0 REPL");
+    println!("Vaca v0.3.0 REPL");
     println!("vaca help - in the command line for the help screen");
     println!("; - to exit the repl");
 
