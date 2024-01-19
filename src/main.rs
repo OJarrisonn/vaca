@@ -27,7 +27,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match std::env::var("VACA_HOME") {
         Ok(_) => {},
         Err(_) => {
-            let vaca_home = format!("{}/.vaca", std::env::var("HOME").unwrap());
+            let default = if cfg!(windows) {
+                std::env::var("TMP").unwrap()
+            } else {
+                String::from("/tmp")
+            };
+            
+            let vaca_home = format!("{}/.vaca", homedir::get_my_home()
+                .unwrap_or(Some((&default).into()))
+                .unwrap_or(default.into())
+                .as_path()
+                .to_string_lossy());
             std::env::set_var("VACA_HOME", &vaca_home);
         },
     };
