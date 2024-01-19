@@ -116,8 +116,8 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
 }
 
 fn compiler(input: String, output: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-    if input.ends_with(".leite") {
-        return Err(Box::new(GenericError(format!("{} is already a *.leite file, there's no need to compile it", input))));
+    if input.ends_with(".casco") {
+        return Err(Box::new(GenericError(format!("{} is already a *.casco file, there's no need to compile it", input))));
     } else if !input.ends_with(".vaca") {
         return Err(Box::new(GenericError(format!("{} is not a *.vaca file", input))))
     }
@@ -125,7 +125,7 @@ fn compiler(input: String, output: Option<String>) -> Result<(), Box<dyn std::er
     let source = fs::read_to_string(&input)?;
     let compiled = parse(format!("{{{}}}", source));
 
-    let output = output.unwrap_or(input.replace(".vaca", ".leite"));
+    let output = output.unwrap_or(input.replace(".vaca", ".casco"));
 
     match compiled {
         Ok(compiled) => Ok(compiled.write_to_file(output)?),
@@ -135,9 +135,9 @@ fn compiler(input: String, output: Option<String>) -> Result<(), Box<dyn std::er
 
 fn runner(owner: &mut Owner, table: &mut SymbolTable, filename: String) -> Result<(), Box<dyn std::error::Error>> {
     let compiled = if filename.ends_with(".vaca") { false } 
-                        else if filename.ends_with(".leite") { true } 
+                        else if filename.ends_with(".casco") { true } 
                         else { 
-                            return Err(Box::new(GenericError(format!("The filename {} isn't a *.vaca nor *.leite file", filename))))
+                            return Err(Box::new(GenericError(format!("The filename {} isn't a *.vaca nor *.casco file", filename))))
                         };
 
 
