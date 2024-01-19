@@ -7,7 +7,6 @@ Vaca is an interpreted functional programming language using a lisp-like syntax
 - No side effects
 - High order functions: functions are treated as values
 - TODO: Partial resolution: if you don't pass enough arguments to a function then the function returns another function as the result
-- Ownership: values have owners, once their owner goes out of scope the value is freed
 - Assingments: values can be assined to names inside a scope
 
 ## Syntax
@@ -47,6 +46,7 @@ This executes the function defined as the first argument passing all the other a
 ```lisp
 [expr expr expr ...]
 ```
+
 This creates an array
 
 ## Example program
@@ -60,11 +60,20 @@ This creates an array
 
 ## TODO
 
-[ ] STL
-- [ ] math lib
-- [ ] array lib
-- [ ] string lib
-[ ] Error Callstack
-[ ] Partial resolution
-- [ ] _ to pass away arguments
-[ ] Library loading
+- [ ] Rename .leite to .casco
+- [ ] STL
+    - [ ] math lib
+    - [ ] array lib
+    - [ ] string lib
+- [ ] Error Callstack
+- [ ] Garbage Collector improvements
+- [ ] Partial resolution
+    - [x] pass less arguments then needed
+    - [ ] use _ to pass away arguments out of order
+- [ ] Library loading
+    - Load some .vaca or .casco files
+    - Load Rust dynamic libraries (.so or .dll)
+    - Load C dynamic libraries (.so or .dll)
+    - Load C++ dynamic libraries (.so or .dll)
+- [ ] Casco CLI tool
+    - A project manager for Vaca
