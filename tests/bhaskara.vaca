@@ -1,0 +1,17 @@
+(print "Inform a: ")
+#(a (parse-float (readln)))
+(print "Inform b: ")
+#(b (parse-float (readln)))
+(print "Inform c: ")
+#(c (parse-float (readln)))
+
+(println "Calculating x' and x''")
+#(delta (brt (- (* b b) (* 4 (* a c))) 2))
+
+(if (< delta 0)
+    (println "No real solution")
+    {
+        #(x- (/ (- (* -1 b) delta) (* 2 a))
+          x-- (/ (+ (* -1 b) delta) (* 2 a)))
+        (println [ "x' " x- ", x'' " x-- ])
+    })
