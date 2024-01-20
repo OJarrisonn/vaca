@@ -1,12 +1,15 @@
 use std::{rc::Rc, io::Write};
 
-
 use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::function::Function};
+
+mod parse;
 
 pub fn load(table: &mut SymbolTable) {
     register!(table, "print", function!(print, "text"));
     register!(table, "println", function!(println, "text"));
     register!(table, "readln", function!(readln));
+    register!(table, "parse-int", function!(parse::parse_int, "text"));
+    register!(table, "parse-float", function!(parse::parse_float, "text"));
 }
 
 pub fn print(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
@@ -42,5 +45,5 @@ pub fn readln(_table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     
     let _ = std::io::stdin().read_line(&mut line);
     
-    Ok(Rc::new(Value::String(line)))
+    Ok(Rc::new(Value::String(line.trim().to_string())))
 }
