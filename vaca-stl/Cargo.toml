@@ -1,11 +1,9 @@
 [package]
-name = "vaca-build"
-version = "0.3.0"
+name = "vaca-stl"
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pest = "2.7.6"
-pest_derive = "2.7.6"
-vaca-core = { path = "../vaca-core" }
+vaca-core ={ path = "../vaca-core" }

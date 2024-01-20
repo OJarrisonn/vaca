@@ -1,12 +1,8 @@
-mod stl;
-mod parser;
 mod cli;
-
-#[macro_use]
-mod macros;
 
 use std::fs;
 
+use build::parse;
 use clap::Parser;
 use cli::{Cli, RunArgs, BuildArgs, Settings};
 use envconfig::Envconfig;
@@ -14,8 +10,8 @@ use rustyline::config::Configurer;
 use rustyline::DefaultEditor;
 use speedy::{Readable, Writable};
 use vaca_core::*;
-
-use crate::parser::parse;
+use vaca_stl as stl;
+use vaca_build as build;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
@@ -72,7 +68,7 @@ fn repl(table: &mut SymbolTable, settings: &Settings) -> Result<(), Box<dyn std:
     // TODO History navigation
 
 
-    println!("Vaca v0.3.0 REPL");
+    println!("Vaca v0.4.0 REPL");
     println!("vaca help - in the command line for the help screen");
     println!("; - to exit the repl");
 
@@ -106,12 +102,9 @@ fn repl(table: &mut SymbolTable, settings: &Settings) -> Result<(), Box<dyn std:
         };
 
         match program.eval(table) {
-            Ok(v) => match v.upgrade() { 
-                Some(v) => match v.as_ref() {    
-                    Value::Nil => println!(""),
-                    d => println!("$>> {d}")
-                },
-                None => return Err(Box::new(GenericError(format!("A form returned a value that got freed"))))
+            Ok(v) => match v.as_ref() {    
+                Value::Nil => println!(""),
+                d => println!("$>> {d}")
             },
             Err(e) => eprintln!("!>> {e}"),
         }
@@ -157,7 +150,25 @@ fn runner(table: &mut SymbolTable, filename: String) -> Result<(), Box<dyn std::
     };
 
     match program.eval(table) {
-        Ok(_Value) => Ok(()),
+        Ok(_) => Ok(()),
         Err(e) => Err(Box::new(GenericError(e))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn run_raw_file() {
+        let mut table = SymbolTable::new();
+        table.create_scope();
+        stl::load(&mut table);
+
+        let res = runner(&mut table, String::from("../tests/fib.vaca"));
+
+        let _ = dbg!(res);
+
+        table.drop_scope();
     }
 }

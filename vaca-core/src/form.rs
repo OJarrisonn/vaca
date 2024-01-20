@@ -121,9 +121,11 @@ impl Literal {
             Literal::Char(c) => Rc::new(Value::Char(*c)),
             Literal::String(s) => Rc::new(Value::String(s.clone())),
             Literal::Bool(b) => Rc::new(Value::Bool(*b)),
-            Literal::Symbol(s) => match table.lookup(s) {
-                Some(v) => v,
-                None => return Err(format!("Tried to evaluate undefined symbol {s}"))
+            Literal::Symbol(s) => {
+                match table.lookup(s) {
+                    Some(v) => v,
+                    None => return Err(format!("Tried to evaluate undefined symbol `{s}`"))
+                }
             },
         };
 
