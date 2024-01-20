@@ -1,7 +1,7 @@
 use std::{error::Error, fmt::Display};
 
 #[derive(Debug)]
-pub struct GenericError(String);
+pub struct GenericError(pub String);
 
 impl Error for GenericError {}
 

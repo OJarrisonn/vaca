@@ -7,7 +7,7 @@ mod io;
 mod logic;
 mod array;
 
-pub fn _eval(_owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+pub fn _eval(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let expr = lookup!(table, "expr");
 
     match expr.as_ref() {
@@ -16,13 +16,13 @@ pub fn _eval(_owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, 
     }
 }
 
-pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
-    register!(owner, table, "pi", Data::Float(3.1415926));
-    register!(owner, table, "+", function!(math::sum, "a", "b"));
-    register!(owner, table, "-", function!(math::sub, "a", "b"));
-    register!(owner, table, "*", function!(math::mul, "a", "b"));
-    register!(owner, table, "/", function!(math::div, "a", "b"));
-    io::load(owner, table);
-    logic::load(owner, table);
-    array::load(owner, table);
+pub fn load(table: &mut SymbolTable) {
+    register!(table, "pi", Data::Float(3.1415926));
+    register!(table, "+", function!(math::sum, "a", "b"));
+    register!(table, "-", function!(math::sub, "a", "b"));
+    register!(table, "*", function!(math::mul, "a", "b"));
+    register!(table, "/", function!(math::div, "a", "b"));
+    io::load(table);
+    logic::load(table);
+    array::load(table);
 }

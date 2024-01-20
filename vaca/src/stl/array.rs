@@ -1,13 +1,11 @@
 use std::rc::Weak;
 
-use crate::{lookup, extract, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable, function::Function}, symbol::Symbol}, register, function, symbol};
-
-pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
-    register!(owner, table, "map", function!(map, "f", "array"));
-    register!(owner, table, "reduce", function!(reduce, "f", "init", "array"));
+pub fn load(table: &mut SymbolTable) {
+    register!(table, "map", function!(map, "f", "array"));
+    register!(table, "reduce", function!(reduce, "f", "init", "array"));
 }
 
-fn map(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+fn map(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let f = lookup!(table, "f");
     let array = lookup!(table, "array");
 
@@ -20,7 +18,7 @@ fn map(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String>
     let mut res = vec![];
 
     for item in array.iter() {
-        let mapped = f.exec(vec![item.clone()], owner, table)?;
+        let mapped = f.exec(vec![item.clone()], table)?;
         let mapped = owner.allocate_return(mapped);
         res.push(mapped);
     }
@@ -28,7 +26,7 @@ fn map(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String>
     Ok(owner.allocate(Data::Array(res)))
 }
 
-fn reduce(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+fn reduce(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let f = lookup!(table, "f");
     let init = table.lookup(&symbol!("init"))?;
     let array = lookup!(table, "array");
@@ -42,7 +40,7 @@ fn reduce(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, Stri
     let mut acc = init;
 
     for item in array.iter() {
-        acc = f.exec(vec![acc, item.clone()], owner, table)?;
+        acc = f.exec(vec![acc, item.clone()], table)?;
     }
 
     Ok(owner.relocate(extract!(acc)))

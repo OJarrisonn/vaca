@@ -1,20 +1,20 @@
 use std::rc::Weak;
 
-use crate::{lookup, extract, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable, function::Function}, symbol::Symbol, expr::Expr}, register, function, symbol};
+use crate::{lookup, extract, runtime::{data::{Data, owner::symbol_table::SymbolTable, function::Function}, symbol::Symbol, expr::Expr}, register, function, symbol};
 
-pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
-    register!(owner, table, "if", Data::Macro(if_macro));
-    register!(owner, table, "==", function!(eq, "a", "b"));
-    register!(owner, table, "!=", function!(neq, "a", "b"));
-    register!(owner, table, "<", function!(lt, "a", "b"));
-    register!(owner, table, ">", function!(gt, "a", "b"));
-    register!(owner, table, "<=", function!(le, "a", "b"));
-    register!(owner, table, ">=", function!(ge, "a", "b"));
-    register!(owner, table, "&", function!(and, "a", "b"));
-    register!(owner, table, "|", function!(or, "a", "b"));
+pub fn load(table: &mut SymbolTable) {
+    register!(table, "if", Data::Macro(if_macro));
+    register!(table, "==", function!(eq, "a", "b"));
+    register!(table, "!=", function!(neq, "a", "b"));
+    register!(table, "<", function!(lt, "a", "b"));
+    register!(table, ">", function!(gt, "a", "b"));
+    register!(table, "<=", function!(le, "a", "b"));
+    register!(table, ">=", function!(ge, "a", "b"));
+    register!(table, "&", function!(and, "a", "b"));
+    register!(table, "|", function!(or, "a", "b"));
 }
 
-fn if_macro(owner: &mut Owner, table: &mut SymbolTable, args: &Vec<Expr>) -> Result<Weak<Data>, String> {
+fn if_macro(table: &mut SymbolTable, args: &Vec<Expr>) -> Result<Weak<Data>, String> {
     if args.len() != 3 {
         return Err(format!("Wrong argument count for if. Needed a condition, a truth expression and a fake expression"))
     }
@@ -22,14 +22,14 @@ fn if_macro(owner: &mut Owner, table: &mut SymbolTable, args: &Vec<Expr>) -> Res
     let truth = &args[1];
     let fake = &args[2];
 
-    if extract!(cond.eval(owner, table)?).as_boolean() {
-        truth.eval(owner, table)
+    if extract!(cond.eval(table)?).as_boolean() {
+        truth.eval(table)
     } else {
-        fake.eval(owner, table)
+        fake.eval(table)
     }
 }
 
-/*fn iff(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+/*fn iff(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let cond = lookup!(table, "cond");
     let truth = lookup!(table, "truth");
     let fake = lookup!(table, "fake");
@@ -52,7 +52,7 @@ fn if_macro(owner: &mut Owner, table: &mut SymbolTable, args: &Vec<Expr>) -> Res
     }
 }*/
 
-fn generic_rel(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(&Data, &Data) -> bool) -> Result<Weak<Data>, String> {
+fn generic_rel(table: &mut SymbolTable, f: impl Fn(&Data, &Data) -> bool) -> Result<Weak<Data>, String> {
     let a = lookup!(table, "a");
     let b = lookup!(table, "b");
 
@@ -72,31 +72,31 @@ fn generic_rel(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(&Data, &Da
     }
 }
 
-fn eq(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic_rel(owner, table, |a, b| a == b)
+fn eq(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic_rel(table, |a, b| a == b)
 }
 
-fn neq(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic_rel(owner, table, |a, b| a != b)
+fn neq(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic_rel(table, |a, b| a != b)
 }
 
-fn gt(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic_rel(owner, table, |a, b| a > b)
+fn gt(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic_rel(table, |a, b| a > b)
 }
 
-fn lt(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic_rel(owner, table, |a, b| a < b)
+fn lt(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic_rel(table, |a, b| a < b)
 }
 
-fn ge(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic_rel(owner, table, |a, b| a >= b)
+fn ge(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic_rel(table, |a, b| a >= b)
 }
 
-fn le(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic_rel(owner, table, |a, b| a <= b)
+fn le(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic_rel(table, |a, b| a <= b)
 }
 
-fn generic_bool(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(bool, bool) -> bool) -> Result<Weak<Data>, String> {
+fn generic_bool(table: &mut SymbolTable, f: impl Fn(bool, bool) -> bool) -> Result<Weak<Data>, String> {
     let a = lookup!(table, "a");
     let b = lookup!(table, "b");
 
@@ -108,10 +108,10 @@ fn generic_bool(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(bool, boo
     }
 }
 
-fn and(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic_bool(owner, table, |a, b| a && b)
+fn and(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic_bool(table, |a, b| a && b)
 }
 
-fn or(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic_bool(owner, table, |a, b| a || b)
+fn or(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic_bool(table, |a, b| a || b)
 }

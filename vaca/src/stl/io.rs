@@ -1,14 +1,14 @@
 use std::{rc::Weak, io::Write};
 
-use crate::{lookup, extract, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable, function::Function}, symbol::Symbol}, register, function, symbol};
+use crate::{lookup, extract, runtime::{data::{Data, owner::symbol_table::SymbolTable, function::Function}, symbol::Symbol}, register, function, symbol};
 
-pub fn load(owner: &mut Owner, table: &mut SymbolTable) {
-    register!(owner, table, "print", function!(print, "text"));
-    register!(owner, table, "println", function!(println, "text"));
-    register!(owner, table, "readln", function!(readln));
+pub fn load(table: &mut SymbolTable) {
+    register!(table, "print", function!(print, "text"));
+    register!(table, "println", function!(println, "text"));
+    register!(table, "readln", function!(readln));
 }
 
-pub fn print(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+pub fn print(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let text = lookup!(table, "text");
 
     match text.as_ref() {
@@ -23,7 +23,7 @@ pub fn print(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, S
     Ok(owner.allocate(Data::Nil))
 }
 
-pub fn println(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+pub fn println(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let text = lookup!(table, "text");
 
     match text.as_ref() {
@@ -38,7 +38,7 @@ pub fn println(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>,
     Ok(owner.allocate(Data::Nil))
 }
 
-pub fn readln(owner: &mut Owner, _table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+pub fn readln(_table: &mut SymbolTable) -> Result<Weak<Data>, String> {
     let mut line = String::new();
     
     let _ = std::io::stdin().read_line(&mut line);

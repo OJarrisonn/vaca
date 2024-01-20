@@ -1,8 +1,8 @@
 use std::rc::Weak;
 
-use crate::{lookup, extract, runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable}, symbol::Symbol}};
+use crate::{lookup, extract, runtime::{data::{Data, owner::symbol_table::SymbolTable}, symbol::Symbol}};
 
-fn generic(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(&f64, &f64) -> f64) -> Result<Weak<Data>, String> {
+fn generic(table: &mut SymbolTable, f: impl Fn(&f64, &f64) -> f64) -> Result<Weak<Data>, String> {
     let a = lookup!(table, "a");
     let b = lookup!(table, "b");
 
@@ -19,18 +19,18 @@ fn generic(owner: &mut Owner, table: &mut SymbolTable, f: impl Fn(&f64, &f64) ->
     Ok(owner.allocate(res))
 }
 
-pub fn sum(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic(owner, table, |a, b| a + b)
+pub fn sum(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic(table, |a, b| a + b)
 }
 
-pub fn sub(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic(owner, table, |a, b| a - b)
+pub fn sub(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic(table, |a, b| a - b)
 }
 
-pub fn mul(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic(owner, table, |a, b| a * b)
+pub fn mul(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic(table, |a, b| a * b)
 }
 
-pub fn div(owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-    generic(owner, table, |a, b| a / b)
+pub fn div(table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+    generic(table, |a, b| a / b)
 }

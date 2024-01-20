@@ -1,6 +1,5 @@
 mod stl;
 mod parser;
-mod runtime;
 mod cli;
 
 #[macro_use]
@@ -11,17 +10,15 @@ use std::fs;
 use clap::Parser;
 use cli::{Cli, RunArgs, BuildArgs, Settings};
 use envconfig::Envconfig;
-use runtime::error::GenericError;
 use rustyline::config::Configurer;
 use rustyline::DefaultEditor;
-use speedy::{Writable, Readable};
+use speedy::{Readable, Writable};
+use vaca_core::*;
 
 use crate::parser::parse;
-use crate::runtime::{data::{Data, owner::Owner, symbol_table::SymbolTable}, expr::{Expr, Literal}, symbol::Symbol};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    let mut owner = Owner::new();
     let mut table = SymbolTable::new();
 
     match std::env::var("VACA_HOME") {
@@ -44,27 +41,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let settings = Settings::init_from_env()?;
 
-    owner.create_scope();
     table.create_scope();
 
-    stl::load(&mut owner, &mut table);
+    stl::load(&mut table);
 
     let res = match cli.command {
         Some(cmd) => match cmd {
-            cli::Commands::Repl => repl(&mut owner, &mut table, &settings),
-            cli::Commands::Run(RunArgs { file: filename }) => runner(&mut owner, &mut table, filename),
+            cli::Commands::Repl => repl(&mut table, &settings),
+            cli::Commands::Run(RunArgs { file: filename }) => runner(&mut table, filename),
             cli::Commands::Build(BuildArgs { input, output}) => compiler(input, output)    
         },
-        None => repl(&mut owner, &mut table, &settings)
+        None => repl(&mut table, &settings)
     };
 
     table.drop_scope();
-    owner.drop_scope();
 
     res
 }
 
-fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
+fn repl(table: &mut SymbolTable, settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
     let mut res: Result<(), Box<dyn std::error::Error>> = Ok(());
 
     let _ = fs::create_dir(&settings.vaca_home);
@@ -97,7 +92,7 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
 
         if input.trim() == ";" { break; }
         if input.trim() == ";clear" { let _ = editor.clear_screen()?; continue }
-        if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s}\t=> \t{v}")); continue }
+        //if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s}\t=> \t{v}")); continue }
         if input.trim() == "" { continue; }
 
         let _ = editor.add_history_entry(&input);
@@ -110,10 +105,10 @@ fn repl(owner: &mut Owner, table: &mut SymbolTable, settings: &Settings) -> Resu
             },
         };
 
-        match program.eval(owner, table) {
+        match program.eval(table) {
             Ok(v) => match v.upgrade() { 
                 Some(v) => match v.as_ref() {    
-                    Data::Nil => println!(""),
+                    Value::Nil => println!(""),
                     d => println!("$>> {d}")
                 },
                 None => return Err(Box::new(GenericError(format!("A form returned a value that got freed"))))
@@ -145,7 +140,7 @@ fn compiler(input: String, output: Option<String>) -> Result<(), Box<dyn std::er
     }
 }
 
-fn runner(owner: &mut Owner, table: &mut SymbolTable, filename: String) -> Result<(), Box<dyn std::error::Error>> {
+fn runner(table: &mut SymbolTable, filename: String) -> Result<(), Box<dyn std::error::Error>> {
     let compiled = if filename.ends_with(".vaca") { false } 
                         else if filename.ends_with(".casco") { true } 
                         else { 
@@ -154,15 +149,15 @@ fn runner(owner: &mut Owner, table: &mut SymbolTable, filename: String) -> Resul
 
 
     let program = if compiled {
-        Expr::read_from_file(filename)?
+        Form::read_from_file(filename)?
     } else {
         let source = fs::read_to_string(filename)?;
     
         parse(format!("{{{}}}", source))?        
     };
 
-    match program.eval(owner, table) {
-        Ok(_data) => Ok(()),
+    match program.eval(table) {
+        Ok(_Value) => Ok(()),
         Err(e) => Err(Box::new(GenericError(e))),
     }
 }
