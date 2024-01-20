@@ -8,6 +8,12 @@ pub fn load(table: &mut SymbolTable) {
     register!(table, "-", function!(sub, "a", "b"));
     register!(table, "*", function!(mul, "a", "b"));
     register!(table, "/", function!(div, "a", "b"));
+    register!(table, "^", function!(pow, "a", "b"));
+    register!(table, "brt", function!(root, "a", "b"));
+    register!(table, "mod", function!(modulus, "a", "b"));
+    register!(table, "//", function!(intdiv, "a", "b"));
+    register!(table, "max", function!(max, "a", "b"));
+    register!(table, "min", function!(min, "a", "b"));
 }
 
 
@@ -40,6 +46,30 @@ fn mul(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     generic(table, |a, b| a * b)
 }
 
+fn pow(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    generic(table, |a, b| a.powf(*b))
+}
+
+fn root(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    generic(table, |a, b| a.powf(1.0 / *b))
+}
+
 fn div(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     generic(table, |a, b| a / b)
+}
+
+fn intdiv(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    generic(table, |a, b| ((*a) as i64 / (*b) as i64) as f64)
+}
+
+fn modulus(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    generic(table, |a, b| ((*a) as i64 % (*b) as i64) as f64)
+}
+
+fn max(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    generic(table, |a, b| a.max(*b))
+}
+
+fn min(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    generic(table, |a, b| a.min(*b))
 }
