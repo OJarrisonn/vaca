@@ -14,3 +14,4 @@ pest = "2.7.6"
 pest_derive = "2.7.6"
 rustyline = { version = "13.0.0", features = ["derive"] }
 speedy = "0.8.7"
+vaca-core ={ path = "../vaca-core"}
