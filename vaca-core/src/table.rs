@@ -37,10 +37,7 @@ impl SymbolTable {
 
     /// Tries to return a Rc to a value stored in the table if the value do exists
     pub fn lookup(&mut self, symbol: &Symbol) -> Option<Rc<Value>> {
-        match self.tables.back().unwrap().get(symbol) {
-            Some(value) => Some(Rc::clone(value)),
-            None => None,
-        }
+        self.tables.iter().rev().find_map(|table| table.get(symbol).cloned())
     }
 
 }
