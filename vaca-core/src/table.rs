@@ -1,7 +1,7 @@
 use std::{collections::LinkedList, rc::Rc};
 
 use rustc_hash::FxHashMap;
-use vaca_core::{Value, Symbol};
+use crate::{Value, Symbol};
 
 /// The structure that register our definitions using the `#( ... )` syntax
 /// A symbol table is a stack of scopes, with each level containing it's associations
@@ -49,7 +49,7 @@ impl SymbolTable {
 mod tests {
     use std::rc::Rc;
 
-    use vaca_core::{Symbol, Value};
+    use crate::{Symbol, Value};
 
     use crate::SymbolTable;
 

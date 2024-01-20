@@ -1,16 +1,17 @@
-use std::{rc::Weak, fmt::Display};
+use std::{rc::Rc, fmt::Display};
 use speedy::{Readable, Writable};
-use crate::{extract, runtime::{data::{Data, owner::Owner, function::Function, symbol_table::SymbolTable}, symbol::Symbol}};
+
+use crate::{Value, Symbol, value::function::Function, SymbolTable};
 
 
 #[derive(Debug, Clone, Readable, Writable)]
-pub enum Expr {
-    AssingmentList(Vec<(Symbol, Expr)>),
-    Assingment(Symbol, Box<Expr>),
-    CodeBlock(Vec<Expr>),
-    Function(Vec<Symbol>, Box<Expr>),
-    Call(Box<Expr>, Vec<Expr>),
-    Array(Vec<Expr>),
+pub enum Form {
+    AssingmentList(Vec<(Symbol, Form)>),
+    Assingment(Symbol, Box<Form>),
+    CodeBlock(Vec<Form>),
+    Function(Vec<Symbol>, Box<Form>),
+    Call(Box<Form>, Vec<Form>),
+    Array(Vec<Form>),
     Literal(Literal)
 }
 
@@ -25,66 +26,64 @@ pub enum Literal {
     Symbol(Symbol)
 }
 
-impl Expr {
-    pub fn eval(&self, owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
+impl Form {
+    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, String> {
         match self {
-            Expr::AssingmentList(pairs) => {
+            Form::AssingmentList(pairs) => {
                 for (s, e) in pairs {
-                    let v = e.eval(owner, table)?;
-                    table.insert(s.clone(), v);
+                    let v = e.eval(table)?;
+                    table.register(s.clone(), v);
                 }
 
-                Ok(owner.allocate(Data::Nil))
+                Ok(Rc::new(Value::Nil))
             },
-            Expr::Assingment(_, _) => {
-                //{ table.insert(symbol.clone(), expr.eval(owner, table)?); }
+            Form::Assingment(_, _) => {
+                //{ table.insert(symbol.clone(), expr.eval(table)?); }
                 panic!("Shouldn't eval over a single assingment");
 
-                //Ok(owner.insert(Data::Nil))
+                //Ok(owner.insert(Value::Nil))
             }
 
-            Expr::CodeBlock(b) => { 
-                owner.create_scope();
+            Form::CodeBlock(b) => { 
                 table.create_scope();
 
                 let mut res = b.iter()
-                .map(|e| e.eval(owner, table))
+                .map(|e| e.eval(table))
                 .reduce(|acc, r| if acc.is_err() { acc } else { r })
-                .unwrap_or(Ok(owner.allocate(Data::Nil)));
+                .unwrap_or(Ok(Rc::new(Value::Nil)));
             
                 if let Ok(d) = res {
-                    res = Ok(owner.allocate_return(d));
+                    res = Ok(d);
                 }
                 
                 table.drop_scope();
-                owner.drop_scope();
 
                 res
             },
 
-            Expr::Function(params, body) => Ok(
-                owner.allocate(
-                    Data::Function(
+            Form::Function(params, body) => Ok(
+                Rc::new(
+                    Value::Function(
                         Function::new(params.clone(), 
                                       (**body).clone())))
             ),
 
-            Expr::Call(func, args) => {
-                let func = func.eval(owner, table);
+            Form::Call(func, args) => {
+                let func = func.eval(table);
 
                 match func {
                     Err(e) => Err(e),
-                    Ok(func) => match extract!(func).as_ref() {
-                        Data::Function(f) => {
-                            let args = Expr::Array(args.clone()).eval(owner, table);
+                    Ok(func) => match func.as_ref() {
+                        Value::Function(f) => {
+                            let args = Form::Array(args.clone()).eval(table);
 
                             match args {
                                 Err(e) => Err(e),
-                                Ok(args) => f.exec(extract!(args).as_vec(), owner, table)
+                                Ok(args) => f.exec(args.as_vec(), table)
                             }
                         },
-                        Data::Macro(m) => {
-                            m(owner, table, args)
+                        Value::Macro(m) => {
+                            m(table, args)
                         }
                         d => Err(format!("Trying call over on functional value {}", d))
                     },
@@ -92,9 +91,9 @@ impl Expr {
             },
 
             // Evaluate each expression and put back into an array
-            Expr::Array(a) => { 
+            Form::Array(a) => { 
                 let res = a.iter()
-                    .map(|e| e.eval(owner, table))
+                    .map(|e| e.eval(table))
                     .fold(Ok(vec![]), |acc, e| match acc {
                         Err(e) => Err(e),
                         Ok(mut v) => match e {
@@ -105,49 +104,52 @@ impl Expr {
 
                 match res {
                     Err(e) => Err(e),
-                    Ok(d) => Ok(owner.allocate(Data::Array(d))),
+                    Ok(d) => Ok(Rc::new(Value::Array(d))),
                 }
             },
-            Expr::Literal(l) => l.eval(owner, table),
+            Form::Literal(l) => l.eval(table),
         }
     }
 }
 
 impl Literal {
-    pub fn eval(&self, owner: &mut Owner, table: &mut SymbolTable) -> Result<Weak<Data>, String> {
-        let data = match self {
-            Literal::Nil => owner.allocate(Data::Nil),
-            Literal::Integer(i) => owner.allocate(Data::Integer(*i)),
-            Literal::Float(f) => owner.allocate(Data::Float(*f)),
-            Literal::Char(c) => owner.allocate(Data::Char(*c)),
-            Literal::String(s) => owner.allocate(Data::String(s.clone())),
-            Literal::Bool(b) => owner.allocate(Data::Bool(*b)),
-            Literal::Symbol(s) => table.lookup(s)?,
+    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+        let value = match self {
+            Literal::Nil => Rc::new(Value::Nil),
+            Literal::Integer(i) => Rc::new(Value::Integer(*i)),
+            Literal::Float(f) => Rc::new(Value::Float(*f)),
+            Literal::Char(c) => Rc::new(Value::Char(*c)),
+            Literal::String(s) => Rc::new(Value::String(s.clone())),
+            Literal::Bool(b) => Rc::new(Value::Bool(*b)),
+            Literal::Symbol(s) => match table.lookup(s) {
+                Some(v) => v,
+                None => return Err(format!("Tried to evaluate undefined symbol {s}"))
+            },
         };
 
-        Ok(data)
+        Ok(value)
     }
 }
 
-impl Display for Expr {
+impl Display for Form {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Expr::AssingmentList(list) => {
+            Form::AssingmentList(list) => {
                 write!(f, "#( ")?;
                 for (s, e) in list.iter() {
                     write!(f, "{} {} ", s, e)?
                 }
                 write!(f, ")")
             },
-            Expr::Assingment(_, _) => unreachable!(),
-            Expr::CodeBlock(block) => {
+            Form::Assingment(_, _) => unreachable!(),
+            Form::CodeBlock(block) => {
                 writeln!(f, "{{")?;
                 for e in block.iter() {
                     writeln!(f, "\t{}", e)?
                 }
                 writeln!(f, "}}")
             },
-            Expr::Function(args, body) => {
+            Form::Function(args, body) => {
                 write!(f, "<( ")?;
                 
                 for s in args.iter() {
@@ -160,7 +162,7 @@ impl Display for Expr {
 
                 write!(f, "{} )", body)
             },
-            Expr::Call(func, args) => {
+            Form::Call(func, args) => {
                 write!(f, "( {func} ")?;
                 
                 for arg in args.iter() {
@@ -169,14 +171,14 @@ impl Display for Expr {
 
                 write!(f, ")")
             },
-            Expr::Array(arr) => {
+            Form::Array(arr) => {
                 write!(f, "[ ")?;
                 for e in arr.iter() {
                     write!(f, "{} ", e)?
                 }
                 write!(f, "]")
             },
-            Expr::Literal(l) => write!(f, "{}", l),
+            Form::Literal(l) => write!(f, "{}", l),
         }
     }
 }
