@@ -1,0 +1,40 @@
+use vaca_core::*;
+use vaca_build;
+use vaca_stl as stl;
+
+use speedy::Readable;
+
+pub fn run(filename: String) -> Result<(), Box<dyn std::error::Error>> {
+    let compiled = if filename.ends_with(".vaca") { false } 
+                        else if filename.ends_with(".casco") { true } 
+                        else { 
+                            return Err(Box::new(GenericError(format!("The filename {} isn't a *.vaca nor *.casco file", filename))))
+                        };
+    
+    let mut table = stl::create_table();
+    table.create_scope();
+    
+
+    let program = if compiled {
+        Form::read_from_file(filename)?
+    } else {
+        let source = std::fs::read_to_string(filename)?;
+    
+        vaca_build::parse(format!("{{{}}}", source))?        
+    };
+
+    let res = match program.eval(&mut table) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(Box::new(GenericError(e))),
+    };
+
+    table.drop_scope();
+    table.drop_scope(); // Drops the scope created by STL
+
+    Ok(res?)
+}
+
+#[cfg(test)]
+mod tests {
+    
+}
