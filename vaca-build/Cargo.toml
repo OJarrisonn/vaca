@@ -1,6 +1,6 @@
 [package]
 name = "vaca-build"
-version = "0.3.0"
+version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 pest = "2.7.6"
 pest_derive = "2.7.6"
+speedy = "0.8.7"
 vaca-core = { path = "../vaca-core" }
