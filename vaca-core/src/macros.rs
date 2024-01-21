@@ -20,7 +20,7 @@ macro_rules! register {
     ($table:expr, $symbol:expr, $value:expr) => {
         $table.register(
             sym!($symbol),
-            ValueRef::Owned($value)
+            $value
         )
     };
 }

@@ -81,7 +81,7 @@ impl Repl {
             };
 
             match program.eval(&mut self.table) {
-                Ok(v) => match v.as_ref() {    
+                Ok(v) => match v.unwrap() {    
                     Value::Nil => println!(""),
                     d => println!("$>> {d}")
                 },
