@@ -1,6 +1,6 @@
-use std::{rc::Rc, io::Write};
+use std::io::Write;
 
-use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::function::Function};
+use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::function::Function, ValueRef};
 
 mod parse;
 
@@ -12,10 +12,15 @@ pub fn load(table: &mut SymbolTable) {
     register!(table, "parse-float", function!(parse::parse_float, "text"));
 }
 
-pub fn print(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let text = lookup!(table, "text").unwrap();
+pub fn print(table: &mut SymbolTable) -> Result<ValueRef, String> {
+    let text = unsafe { lookup!(table, "text").unwrap().as_ref() };
 
-    match text.as_ref() {
+    let text = match text {
+        Some(text) => text,
+        None => return Err(format!("`text` is null")),
+    };
+
+    match text {
         Value::Array(list) => list.iter()
             .for_each(|t| print!("{}", t)),
         d => print!("{}", d)
@@ -23,13 +28,18 @@ pub fn print(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
 
     let _ = std::io::stdout().flush();
     
-    Ok(Rc::new(Value::Nil))
+    Ok(ValueRef::Owned(Value::Nil))
 }
 
-pub fn println(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let text = lookup!(table, "text").unwrap();
+pub fn println(table: &mut SymbolTable) -> Result<ValueRef, String> {
+    let text = unsafe { lookup!(table, "text").unwrap().as_ref() };
 
-    match text.as_ref() {
+    let text = match text {
+        Some(text) => text,
+        None => return Err(format!("`text` is null")),
+    };
+
+    match text {
         Value::Array(list) => list.iter()
             .for_each(|t| print!("{}", t)),
         d => print!("{}", d)
@@ -37,13 +47,13 @@ pub fn println(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
 
     println!("");
     
-    Ok(Rc::new(Value::Nil))
+    Ok(ValueRef::Owned(Value::Nil))
 }
 
-pub fn readln(_table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+pub fn readln(_table: &mut SymbolTable) -> Result<ValueRef, String> {
     let mut line = String::new();
     
     let _ = std::io::stdin().read_line(&mut line);
     
-    Ok(Rc::new(Value::String(line.trim().to_string())))
+    Ok(ValueRef::Owned(Value::String(line.trim().to_string())))
 }
