@@ -1,9 +1,15 @@
-use std::{rc::Rc, fmt::Display, iter::zip};
+use std::{fmt::Display, iter::zip};
 
 use self::{function::Function, macros::NativeMacro};
 
 pub mod function;
 pub mod macros;
+
+#[derive(Debug, Clone)]
+pub enum ValueRef {
+    Owned(Value),
+    Pointed(*const Value)
+}
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -13,13 +19,13 @@ pub enum Value {
     Float(f64),
     Char(char),
     String(String),
-    Array(Vec<Rc<Value>>),
+    Array(Vec<ValueRef>),
     Function(Function),
     Macro(NativeMacro)
 }
 
-impl Into<Vec<Rc<Value>>> for Value {
-    fn into(self) -> Vec<Rc<Value>> {
+impl Into<Vec<ValueRef>> for Value {
+    fn into(self) -> Vec<ValueRef> {
         match self {
             Self::Array(a) => a,
             d => panic!("Can't turn a {} into an array like", d)
@@ -27,8 +33,17 @@ impl Into<Vec<Rc<Value>>> for Value {
     }
 }
 
+impl ValueRef {
+    pub fn unwrap(self) -> Value {
+        match self {
+            ValueRef::Owned(v) => v,
+            ValueRef::Pointed(v) => unsafe { std::ptr::read(v) },
+        }
+    }
+}
+
 impl Value {
-    pub fn as_vec(&self) -> Vec<Rc<Value>> {
+    pub fn as_vec(&self) -> Vec<ValueRef> {
         match self {
             Self::Array(a) => a.clone(),
             d => panic!("Can't turn a {} into an array like", d)
@@ -47,6 +62,17 @@ impl Value {
             Value::Function(_) => false,
             Value::Macro(_) => false,
         }
+    }
+}
+
+impl Display for ValueRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let res = match &self {
+            Self::Owned(v) => v,
+            Self::Pointed(v) => unsafe { std::ptr::read(v) }
+        };
+
+        write!(f, "{}", &unsafe { std::ptr::read(res) })
     }
 }
 
@@ -70,7 +96,6 @@ impl Display for Value {
     }
 }
 
-
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match (self, other) {
@@ -82,6 +107,12 @@ impl PartialOrd for Value {
             (Self::String(l0), Self::String(r0)) => l0.partial_cmp(r0),
             _ => None
         }
+    }
+}
+
+impl PartialEq for ValueRef {
+    fn eq(&self, other: &Self) -> bool {
+        self.clone().unwrap() == other.clone().unwrap()
     }
 }
 

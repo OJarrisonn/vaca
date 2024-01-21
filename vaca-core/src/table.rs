@@ -1,4 +1,4 @@
-use std::{collections::LinkedList, rc::Rc};
+use std::collections::LinkedList;
 
 use rustc_hash::FxHashMap;
 use crate::{Value, Symbol};
@@ -8,7 +8,7 @@ use crate::{Value, Symbol};
 /// This allows name shadowing by overriding a Value in a inner scope, but recovering it when exiting the scope
 #[derive(Debug)]
 pub struct SymbolTable {
-    tables: LinkedList<FxHashMap<Symbol, Rc<Value>>>
+    tables: LinkedList<FxHashMap<Symbol, Value>>
 }
 
 impl SymbolTable {
@@ -31,20 +31,22 @@ impl SymbolTable {
     }
 
     /// Associates a symbol to a new value in the current top scope
-    pub fn register(&mut self, symbol: Symbol, value: Rc<Value>) {
+    pub fn register(&mut self, symbol: Symbol, value: Value) {
         self.tables.back_mut().unwrap().insert(symbol, value);
     }
 
     /// Tries to return a Rc to a value stored in the table if the value do exists
-    pub fn lookup(&mut self, symbol: &Symbol) -> Option<Rc<Value>> {
-        self.tables.iter().rev().find_map(|table| table.get(symbol).cloned())
+    pub fn lookup(&mut self, symbol: &Symbol) -> Option<*const Value> {
+        let value = self.tables.iter().rev()
+            .find_map(|table| table.get(symbol))?;
+    
+        Some(value as *const Value)
     }
 
 }
 
 #[cfg(test)]
 mod tests {
-    use std::rc::Rc;
 
     use crate::{Symbol, Value};
 
@@ -56,11 +58,11 @@ mod tests {
 
         table.create_scope();
 
-        table.register(Symbol::from("a"), Rc::new(Value::Bool(false)));
+        table.register(Symbol::from("a"), Value::Bool(false));
 
         table.create_scope();
 
-        table.register(Symbol::from("b"), Rc::new(Value::Char('j')));
+        table.register(Symbol::from("b"), Value::Char('j'));
 
         table.drop_scope();
 

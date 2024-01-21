@@ -1,7 +1,7 @@
 use std::{rc::Rc, fmt::Display};
 use speedy::{Readable, Writable};
 
-use crate::{Value, Symbol, value::function::Function, SymbolTable};
+use crate::{Value, Symbol, value::function::Function, SymbolTable, ValueRef};
 
 
 #[derive(Debug, Clone, Readable, Writable)]
@@ -27,15 +27,15 @@ pub enum Literal {
 }
 
 impl Form {
-    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    pub fn eval(&self, table: &mut SymbolTable) -> Result<ValueRef, String> {
         match self {
             Form::AssingmentList(pairs) => {
                 for (s, e) in pairs {
                     let v = e.eval(table)?;
-                    table.register(s.clone(), v);
+                    table.register(s.clone(), v.unwrap());
                 }
 
-                Ok(Rc::new(Value::Nil))
+                Ok(ValueRef::Owned(Value::Nil))
             },
             Form::Assingment(_, _) => {
                 //{ table.insert(symbol.clone(), expr.eval(table)?); }
@@ -50,7 +50,7 @@ impl Form {
                 let mut res = b.iter()
                 .map(|e| e.eval(table))
                 .reduce(|acc, r| if acc.is_err() { acc } else { r })
-                .unwrap_or(Ok(Rc::new(Value::Nil)));
+                .unwrap_or(Ok(ValueRef::Owned(Value::Nil)));
             
                 if let Ok(d) = res {
                     res = Ok(d);
@@ -62,7 +62,7 @@ impl Form {
             },
 
             Form::Function(params, body) => Ok(
-                Rc::new(
+                ValueRef::Owned(
                     Value::Function(
                         Function::new(params.clone(), 
                                       (**body).clone())))
@@ -73,13 +73,13 @@ impl Form {
 
                 match func {
                     Err(e) => Err(e),
-                    Ok(func) => match func.as_ref() {
+                    Ok(func) => match func.unwrap() {
                         Value::Function(f) => {
                             let args = Form::Array(args.clone()).eval(table);
 
                             match args {
                                 Err(e) => Err(e),
-                                Ok(args) => f.exec(args.as_vec(), table)
+                                Ok(args) => f.exec(args.unwrap().as_vec(), table)
                             }
                         },
                         Value::Macro(m) => {
@@ -104,7 +104,7 @@ impl Form {
 
                 match res {
                     Err(e) => Err(e),
-                    Ok(d) => Ok(Rc::new(Value::Array(d))),
+                    Ok(d) => Ok(ValueRef::Owned(Value::Array(d))),
                 }
             },
             Form::Literal(l) => l.eval(table),
@@ -113,17 +113,17 @@ impl Form {
 }
 
 impl Literal {
-    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    pub fn eval(&self, table: &mut SymbolTable) -> Result<ValueRef, String> {
         let value = match self {
-            Literal::Nil => Rc::new(Value::Nil),
-            Literal::Integer(i) => Rc::new(Value::Integer(*i)),
-            Literal::Float(f) => Rc::new(Value::Float(*f)),
-            Literal::Char(c) => Rc::new(Value::Char(*c)),
-            Literal::String(s) => Rc::new(Value::String(s.clone())),
-            Literal::Bool(b) => Rc::new(Value::Bool(*b)),
+            Literal::Nil => ValueRef::Owned(Value::Nil),
+            Literal::Integer(i) => ValueRef::Owned(Value::Integer(*i)),
+            Literal::Float(f) => ValueRef::Owned(Value::Float(*f)),
+            Literal::Char(c) => ValueRef::Owned(Value::Char(*c)),
+            Literal::String(s) => ValueRef::Owned(Value::String(s.clone())),
+            Literal::Bool(b) => ValueRef::Owned(Value::Bool(*b)),
             Literal::Symbol(s) => {
                 match table.lookup(s) {
-                    Some(v) => v,
+                    Some(v) => ValueRef::Pointed(v),
                     None => return Err(format!("Tried to evaluate undefined symbol `{s}`"))
                 }
             },
