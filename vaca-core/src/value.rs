@@ -1,4 +1,4 @@
-use std::{fmt::Display, iter::zip};
+use std::{fmt::Display, iter::zip, collections::LinkedList};
 
 use self::{function::Function, macros::NativeMacro};
 
@@ -19,13 +19,13 @@ pub enum Value {
     Float(f64),
     Char(char),
     String(String),
-    Array(Vec<ValueRef>),
+    Array(LinkedList<ValueRef>),
     Function(Function),
     Macro(NativeMacro)
 }
 
-impl Into<Vec<ValueRef>> for Value {
-    fn into(self) -> Vec<ValueRef> {
+impl Into<LinkedList<ValueRef>> for Value {
+    fn into(self) -> LinkedList<ValueRef> {
         match self {
             Self::Array(a) => a,
             d => panic!("Can't turn a {} into an array like", d)
@@ -43,7 +43,7 @@ impl ValueRef {
 }
 
 impl Value {
-    pub fn as_vec(&self) -> Vec<ValueRef> {
+    pub fn as_vec(&self) -> LinkedList<ValueRef> {
         match self {
             Self::Array(a) => a.clone(),
             d => panic!("Can't turn a {} into an array like", d)

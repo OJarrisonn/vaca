@@ -1,4 +1,4 @@
-use std::{rc::Rc, fmt::Display};
+use std::{fmt::Display, collections::LinkedList};
 use speedy::{Readable, Writable};
 
 use crate::{Value, Symbol, value::function::Function, SymbolTable, ValueRef};
@@ -94,11 +94,11 @@ impl Form {
             Form::Array(a) => { 
                 let res = a.iter()
                     .map(|e| e.eval(table))
-                    .fold(Ok(vec![]), |acc, e| match acc {
+                    .fold(Ok(LinkedList::new()), |acc, e| match acc {
                         Err(e) => Err(e),
                         Ok(mut v) => match e {
                             Err(e) => Err(e),
-                            Ok(d) => { v.push(d); Ok(v) },
+                            Ok(d) => { v.push_back(d); Ok(v) },
                         }
                     });
 

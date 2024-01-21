@@ -1,4 +1,4 @@
-use std::iter::zip;
+use std::{iter::zip, collections::LinkedList};
 
 use crate::{Symbol, Value, SymbolTable, Form, ValueRef};
 
@@ -6,7 +6,7 @@ use crate::{Symbol, Value, SymbolTable, Form, ValueRef};
 pub struct Function {
     arity: usize,
     params: Vec<Symbol>,
-    partials: Vec<ValueRef>,
+    partials: LinkedList<ValueRef>,
     body: Option<Form>,
     native: Option<NativeFunction>
 }
@@ -19,7 +19,7 @@ impl Function {
         Self {
             arity: params.len(), 
             params,
-            partials: vec![],
+            partials: LinkedList::new(),
             body: Some(body),
             native: None
         }
@@ -29,7 +29,7 @@ impl Function {
         Self { 
             arity: params.len(), 
             params, 
-            partials: vec![],
+            partials: LinkedList::new(),
             body: None, 
             native: Some(native) 
         }
@@ -39,7 +39,7 @@ impl Function {
         self.arity
     }
 
-    pub fn exec(&self, source_args: Vec<ValueRef>, table: &mut SymbolTable) -> Result<ValueRef, String> {
+    pub fn exec(&self, source_args: LinkedList<ValueRef>, table: &mut SymbolTable) -> Result<ValueRef, String> {
         if self.arity < source_args.len() {
             return Err(format!("Missmatch on argument count, expected {}, got {}", self.arity, source_args.len()));
         } else if self.arity > source_args.len() {
@@ -64,7 +64,7 @@ impl Function {
         return res;
     }
 
-    pub fn partial(source: &Self, args: Vec<ValueRef>) -> Self {
+    pub fn partial(source: &Self, args: LinkedList<ValueRef>) -> Self {
         let mut source = source.clone();
         source.arity -= args.len();
         source.partials.extend(args.into_iter());
