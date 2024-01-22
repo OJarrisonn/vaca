@@ -1,14 +1,15 @@
 use std::{error::Error, fmt::Display};
 
-use crate::Form;
-
 //#[derive(Debug)]
 //pub struct GenericError(pub String);
 
 #[derive(Debug)]
-pub enum ErrorStack<'a> {
-    Top{src: Option<&'a Form>, msg: String},
-    Stream{src: Option<&'a Form>, from: Box<dyn std::error::Error>, note: Option<String>}
+/// The ErrorStack is used to help debugging the callstack to see exactly what went wrong and where
+/// It may contain the source form where the error happened, if you can't provide the source form, a good explanation message/note MUST be provided
+/// When not at the top of the stack you may reference the Error, which can be anything that impl std::error::Error
+pub enum ErrorStack {
+    Top{src: Option<String>, msg: String},
+    Stream{src: Option<String>, from: Box<dyn std::error::Error>, note: Option<String>}
 }
 
 //impl Error for GenericError {}
@@ -19,9 +20,15 @@ pub enum ErrorStack<'a> {
 //     }
 //}
 
-impl Error for ErrorStack<'_> {}
+impl From<String> for ErrorStack {
+    fn from(value: String) -> Self {
+        Self::Top { src: None, msg: value }
+    }
+}
 
-impl Display for ErrorStack<'_> {
+impl Error for ErrorStack{}
+
+impl Display for ErrorStack {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ErrorStack::Top { src, msg } => { 
