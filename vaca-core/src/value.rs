@@ -1,9 +1,12 @@
 use std::{rc::Rc, fmt::Display, iter::zip};
 
-use self::{function::Function, macros::NativeMacro};
+use self::{function::Function, macros::NativeMacro, array::Array};
 
 pub mod function;
 pub mod macros;
+pub mod valueref;
+pub mod result;
+pub mod array;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -13,13 +16,13 @@ pub enum Value {
     Float(f64),
     Char(char),
     String(String),
-    Array(Vec<Rc<Value>>),
+    Array(Array),
     Function(Function),
     Macro(NativeMacro)
 }
 
-impl Into<Vec<Rc<Value>>> for Value {
-    fn into(self) -> Vec<Rc<Value>> {
+impl Into<Array> for Value {
+    fn into(self) -> Array {
         match self {
             Self::Array(a) => a,
             d => panic!("Can't turn a {} into an array like", d)
@@ -28,7 +31,8 @@ impl Into<Vec<Rc<Value>>> for Value {
 }
 
 impl Value {
-    pub fn as_vec(&self) -> Vec<Rc<Value>> {
+    /// Copies the Value and unwraps an array
+    pub fn to_array(&self) -> Array {
         match self {
             Self::Array(a) => a.clone(),
             d => panic!("Can't turn a {} into an array like", d)
