@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
-use crate::{Value, SymbolTable, Form};
+use crate::{Value, SymbolTable, Form, ErrorStack};
 
 
 
-pub type NativeMacro = fn(&mut SymbolTable, &Vec<Form>) -> Result<Rc<Value>, String>;
+pub type NativeMacro = fn(&mut SymbolTable, &Vec<Form>) -> Result<Rc<Value>, ErrorStack>;

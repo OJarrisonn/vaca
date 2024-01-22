@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::function::Function};
+use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::function::Function, ErrorStack};
 
 pub fn load(table: &mut SymbolTable) {
     register!(table, "nth", function!(nth, "index", "array"));
@@ -12,14 +12,15 @@ pub fn load(table: &mut SymbolTable) {
     register!(table, "concat", function!(concat, "init", "end"));
 }
 
-fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let index = lookup!(table, "index").unwrap();
-    let array = lookup!(table, "array").unwrap().to_array();
-
+fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    let index = lookup!(table, "index")?;
+    
     let mut index = *match index.as_ref() {
         Value::Integer(i) => i,
-        i => return Err(format!("Argument for `index` must be an integer not {i}"))
+        i => return Err(format!("Argument for `index` must be an integer not {i}").into())
     };
+
+    let array = lookup!(table, "array")?.to_array();
 
     if array.len() == 0 {
         Ok(Rc::new(Value::Nil))
@@ -37,43 +38,42 @@ fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     }
 }
 
-fn prepend(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let item = lookup!(table, "item").unwrap();
-    let mut array = lookup!(table, "array").unwrap().to_array();
+fn prepend(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    let item = lookup!(table, "item")?;
+    let mut array = lookup!(table, "array")?.to_array();
 
     array.insert(0, item);
 
     Ok(Rc::new(Value::Array(array)))
 }
 
-fn append(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let item = lookup!(table, "item").unwrap();
-    let mut array = lookup!(table, "array").unwrap().to_array();
+fn append(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    let item = lookup!(table, "item")?;
+    let mut array = lookup!(table, "array")?.to_array();
 
     array.push(item);
 
     Ok(Rc::new(Value::Array(array)))
 }
 
-fn concat(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let mut init = lookup!(table, "init").unwrap().to_array();
-    let end = lookup!(table, "end").unwrap().to_array();
+fn concat(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    let mut init = lookup!(table, "init")?.to_array();
+    let end = lookup!(table, "end")?.to_array();
 
     init.extend(end.into_iter());
 
     Ok(Rc::new(Value::Array(init)))
 }
 
-fn map(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let f = lookup!(table, "f").unwrap();
-    let array = lookup!(table, "array").unwrap();
-
+fn map(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    let f = lookup!(table, "f")?;
+    
     let f = match f.as_ref() {
         Value::Function(f) => f,
-        _ => return Err(format!("Argument for `f` should be a function not a {f}"))
+        _ => return Err(format!("Argument for `f` should be a function not a {f}").into())
     };
 
-    let mut array = array.to_array();
+    let mut array = lookup!(table, "array")?.to_array();
 
     for item in array.iter_mut() {
         *item = f.exec(vec![item.clone()], table)?;
@@ -82,18 +82,16 @@ fn map(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     Ok(Rc::new(Value::Array(array)))
 }
 
-fn reduce(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let f = lookup!(table, "f").unwrap();
-    let init = lookup!(table, "init").unwrap();
-    let array = lookup!(table, "array").unwrap();
-
+fn reduce(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    let f = lookup!(table, "f")?;
+    
     let f = match f.as_ref() {
         Value::Function(f) => f,
-        _ => return Err(format!("Argument for `f` should be a function not a {f}"))
+        _ => return Err(format!("Argument for `f` should be a function not a {f}").into())
     };
 
-    let array = array.to_array();
-    let mut acc = init;
+    let mut acc = lookup!(table, "init")?;
+    let array = lookup!(table, "array")?.to_array();
 
     for item in array.iter() {
         acc = f.exec(vec![acc, item.clone()], table)?;
@@ -102,18 +100,16 @@ fn reduce(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     Ok(acc)
 }
 
-fn scan(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let f = lookup!(table, "f").unwrap();
-    let init = lookup!(table, "init").unwrap();
-    let array = lookup!(table, "array").unwrap();
-
+fn scan(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    let f = lookup!(table, "f")?;
+    
     let f = match f.as_ref() {
         Value::Function(f) => f,
-        _ => return Err(format!("Argument for `f` should be a function not a {f}"))
+        _ => return Err(format!("Argument for `f` should be a function not a {f}").into())
     };
 
-    let mut array = array.to_array();
-    let mut acc = init;
+    let mut acc = lookup!(table, "init")?;
+    let mut array = lookup!(table, "array")?.to_array();
 
     for item in array.iter_mut() {
         acc = f.exec(vec![acc, item.clone()], table)?;

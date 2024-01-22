@@ -1,6 +1,6 @@
 use std::{iter::zip, rc::Rc};
 
-use crate::{Symbol, Value, SymbolTable, Form};
+use crate::{Symbol, Value, SymbolTable, Form, ErrorStack};
 
 #[derive(Debug, Clone)]
 pub struct Function {
@@ -12,7 +12,7 @@ pub struct Function {
 }
 
 /// The function call takes care of passing the return value to the previous ownership scope
-pub type NativeFunction = fn(&mut SymbolTable) -> Result<Rc<Value>, String>;
+pub type NativeFunction = fn(&mut SymbolTable) -> Result<Rc<Value>, ErrorStack>;
 
 impl Function {
     pub fn new(params: Vec<Symbol>, body: Form) -> Self {
@@ -39,9 +39,12 @@ impl Function {
         self.arity
     }
 
-    pub fn exec(&self, source_args: Vec<Rc<Value>>, table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    pub fn exec(&self, source_args: Vec<Rc<Value>>, table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
         if self.arity < source_args.len() {
-            return Err(format!("Missmatch on argument count, expected {}, got {}", self.arity, source_args.len()));
+            return Err(ErrorStack::Top { 
+                src: self.body.as_ref().map(|b| b.to_string()), 
+                msg: format!("Too many arguments passed to function call, expected {}, but got {}", self.arity, source_args.len()) 
+            });
         } else if self.arity > source_args.len() {
             return Ok(Rc::new(Value::Function(Function::partial(&self, source_args))));
         }

@@ -1,7 +1,7 @@
 use std::{rc::Rc, fmt::Display};
 use speedy::{Readable, Writable};
 
-use crate::{Value, Symbol, value::function::Function, SymbolTable};
+use crate::{Value, Symbol, value::function::Function, SymbolTable, ErrorStack};
 
 
 #[derive(Debug, Clone, Readable, Writable)]
@@ -27,7 +27,7 @@ pub enum Literal {
 }
 
 impl Form {
-    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
         match self {
             Form::AssingmentList(pairs) => {
                 for (s, e) in pairs {
@@ -80,12 +80,20 @@ impl Form {
                             match args {
                                 Err(e) => Err(e),
                                 Ok(args) => f.exec(args.to_array(), table)
+                                    .map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
                             }
                         },
                         Value::Macro(m) => {
-                            m(table, args)
+                            m(table, args).map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
                         }
-                        d => Err(format!("Trying call over on functional value {}", d))
+                        d => if args.len() == 0 {
+                            Ok(func)
+                        } else {
+                            Err(ErrorStack::Top { 
+                                src: Some(self.to_string()), 
+                                msg: format!("Trying call a non function value `{}`", d) 
+                            })
+                        }
                     },
                 }
             },
@@ -107,13 +115,13 @@ impl Form {
                     Ok(d) => Ok(Rc::new(Value::Array(d))),
                 }
             },
-            Form::Literal(l) => l.eval(table),
+            Form::Literal(l) => l.eval(table).map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None }),
         }
     }
 }
 
 impl Literal {
-    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, String> {
+    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
         let value = match self {
             Literal::Nil => Rc::new(Value::Nil),
             Literal::Integer(i) => Rc::new(Value::Integer(*i)),
@@ -121,12 +129,7 @@ impl Literal {
             Literal::Char(c) => Rc::new(Value::Char(*c)),
             Literal::String(s) => Rc::new(Value::String(s.clone())),
             Literal::Bool(b) => Rc::new(Value::Bool(*b)),
-            Literal::Symbol(s) => {
-                match table.lookup(s) {
-                    Some(v) => v,
-                    None => return Err(format!("Tried to evaluate undefined symbol `{s}`"))
-                }
-            },
+            Literal::Symbol(s) => table.lookup(s)?//.map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })?,
         };
 
         Ok(value)
