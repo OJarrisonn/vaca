@@ -2,8 +2,8 @@ use std::{error::Error, fmt::Display};
 
 use crate::Form;
 
-#[derive(Debug)]
-pub struct GenericError(pub String);
+//#[derive(Debug)]
+//pub struct GenericError(pub String);
 
 #[derive(Debug)]
 pub enum ErrorStack<'a> {
@@ -11,13 +11,13 @@ pub enum ErrorStack<'a> {
     Stream{src: Option<&'a Form>, from: Box<dyn std::error::Error>, note: Option<String>}
 }
 
-impl Error for GenericError {}
+//impl Error for GenericError {}
 
-impl Display for GenericError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Error: {}", self.0)
-    }
-}
+// impl Display for GenericError {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "Error: {}", self.0)
+//     }
+//}
 
 impl Error for ErrorStack<'_> {}
 
