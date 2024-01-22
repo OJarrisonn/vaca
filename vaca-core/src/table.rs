@@ -1,7 +1,7 @@
 use std::{collections::LinkedList, rc::Rc};
 
 use rustc_hash::FxHashMap;
-use crate::{Value, Symbol};
+use crate::{Value, Symbol, ErrorStack};
 
 /// The structure that register our definitions using the `#( ... )` syntax
 /// A symbol table is a stack of scopes, with each level containing it's associations
@@ -36,8 +36,12 @@ impl SymbolTable {
     }
 
     /// Tries to return a Rc to a value stored in the table if the value do exists
-    pub fn lookup(&mut self, symbol: &Symbol) -> Option<Rc<Value>> {
-        self.tables.iter().rev().find_map(|table| table.get(symbol).cloned())
+    pub fn lookup(&mut self, symbol: &Symbol) -> Result<Rc<Value>, ErrorStack> {
+        match self.tables.iter().rev().find_map(|table| table.get(symbol).cloned()) {
+            Some(value) => Ok(value),
+            None => Err(ErrorStack::Top { src: None, msg: format!("Use of undefined symbol `{}`. Maybe you misspeled or the symbol's scope got dropped", symbol) }
+            ),
+        }
     }
 
 }

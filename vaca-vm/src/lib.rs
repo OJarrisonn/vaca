@@ -8,7 +8,7 @@ pub fn run(filename: String) -> Result<(), Box<dyn std::error::Error>> {
     let compiled = if filename.ends_with(".vaca") { false } 
                         else if filename.ends_with(".casco") { true } 
                         else { 
-                            return Err(Box::new(GenericError(format!("The filename {} isn't a *.vaca nor *.casco file", filename))))
+                            return Err(Box::new(ErrorStack::from(format!("The filename {} isn't a *.vaca nor *.casco file", filename))))
                         };
     
     let mut table = stl::create_table();
@@ -25,7 +25,7 @@ pub fn run(filename: String) -> Result<(), Box<dyn std::error::Error>> {
 
     let res = match program.eval(&mut table) {
         Ok(_) => Ok(()),
-        Err(e) => Err(Box::new(GenericError(e))),
+        Err(e) => Err(Box::new(ErrorStack::Stream{src: None, from: Box::new(e), note: Some("Error during evaluation of the source program".into())})),
     };
 
     table.drop_scope();

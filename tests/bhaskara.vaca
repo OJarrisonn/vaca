@@ -6,12 +6,12 @@
 #(c (parse-float (readln)))
 
 (println "Calculating x' and x''")
-#(delta (brt (- (* b b) (* 4 (* a c))) 2))
+#(delta (- (* b b) (* 4 (* a c))))
 
 (if (< delta 0)
     (println "No real solution")
     {
-        #(x- (/ (- (* -1 b) delta) (* 2 a))
-          x-- (/ (+ (* -1 b) delta) (* 2 a)))
+        #(x- (/ (- (* -1 b) (brt delta 2)) (* 2 a))
+          x-- (/ (+ (* -1 b) (brt delta 2)) (* 2 a)))
         (println [ "x' " x- ", x'' " x-- ])
     })

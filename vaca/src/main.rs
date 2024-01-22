@@ -6,7 +6,7 @@ use envconfig::Envconfig;
 use vaca_repl::{Repl, Settings};
 use vaca_vm;
 
-const VERSION: &str = "0.5.2";
+const VERSION: &str = "0.5.4";
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
@@ -37,7 +37,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         None => repl(VERSION)
     };
 
-    res
+    match res {
+        Err(e) => {eprintln!("{}", e); Err(e)},
+        ok => ok
+    }
 }
 
 fn repl(version: &str) -> Result<(), Box<dyn std::error::Error>> {

@@ -1,4 +1,4 @@
-use std::{rc::Rc, fmt::Display, iter::zip};
+use std::{fmt::Display, iter::zip};
 
 use self::{function::Function, macros::NativeMacro, array::Array};
 
@@ -11,6 +11,7 @@ pub mod array;
 #[derive(Debug, Clone)]
 pub enum Value {
     Nil,
+    NotANumber,
     Bool(bool),
     Integer(i64),
     Float(f64),
@@ -42,6 +43,7 @@ impl Value {
     pub fn as_boolean(&self) -> bool {
         match self {
             Value::Nil => false,
+            Value::NotANumber => false,
             Value::Bool(b) => *b,
             Value::Integer(i) => *i != 0,
             Value::Float(f) => *f != 0.,
@@ -58,6 +60,7 @@ impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", match self {
             Self::Nil => format!("'nil"),
+            Self::NotANumber => format!("'nan"),
             Self::Bool(b) => format!("{b}"),
             Self::Char(c) => format!("{c}"),
             Self::Integer(i) => format!("{i}"),
@@ -67,7 +70,7 @@ impl Display for Value {
                 .reduce(|acc, f| format!("{acc}{f}"))
                 .unwrap_or(String::from(""))
             ),
-            Self::Function(f) => format!("'function\\{}", f.arity()),
+            Self::Function(f) => format!("'func\\{}", f.arity()),
             Self::Macro(_) => format!("'macro"),
             Self::String(s) => s.clone()
         })
@@ -93,6 +96,7 @@ impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Nil, Self::Nil) => true,
+            (Self::NotANumber, Self::NotANumber) => true,
             (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
             (Self::Integer(l0), Self::Integer(r0)) => l0 == r0,
             (Self::Integer(l0), Self::Float(r0)) => *l0 as f64 == *r0,
