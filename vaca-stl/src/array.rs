@@ -14,7 +14,7 @@ pub fn load(table: &mut SymbolTable) {
 
 fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     let index = lookup!(table, "index").unwrap();
-    let array = lookup!(table, "array").unwrap().as_vec();
+    let array = lookup!(table, "array").unwrap().to_array();
 
     let mut index = *match index.as_ref() {
         Value::Integer(i) => i,
@@ -39,7 +39,7 @@ fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
 
 fn prepend(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     let item = lookup!(table, "item").unwrap();
-    let mut array = lookup!(table, "array").unwrap().as_vec();
+    let mut array = lookup!(table, "array").unwrap().to_array();
 
     array.insert(0, item);
 
@@ -48,7 +48,7 @@ fn prepend(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
 
 fn append(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
     let item = lookup!(table, "item").unwrap();
-    let mut array = lookup!(table, "array").unwrap().as_vec();
+    let mut array = lookup!(table, "array").unwrap().to_array();
 
     array.push(item);
 
@@ -56,8 +56,8 @@ fn append(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
 }
 
 fn concat(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
-    let mut init = lookup!(table, "init").unwrap().as_vec();
-    let end = lookup!(table, "end").unwrap().as_vec();
+    let mut init = lookup!(table, "init").unwrap().to_array();
+    let end = lookup!(table, "end").unwrap().to_array();
 
     init.extend(end.into_iter());
 
@@ -73,7 +73,7 @@ fn map(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
         _ => return Err(format!("Argument for `f` should be a function not a {f}"))
     };
 
-    let mut array = array.as_vec();
+    let mut array = array.to_array();
 
     for item in array.iter_mut() {
         *item = f.exec(vec![item.clone()], table)?;
@@ -92,7 +92,7 @@ fn reduce(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
         _ => return Err(format!("Argument for `f` should be a function not a {f}"))
     };
 
-    let array = array.as_vec();
+    let array = array.to_array();
     let mut acc = init;
 
     for item in array.iter() {
@@ -112,7 +112,7 @@ fn scan(table: &mut SymbolTable) -> Result<Rc<Value>, String> {
         _ => return Err(format!("Argument for `f` should be a function not a {f}"))
     };
 
-    let mut array = array.as_vec();
+    let mut array = array.to_array();
     let mut acc = init;
 
     for item in array.iter_mut() {
