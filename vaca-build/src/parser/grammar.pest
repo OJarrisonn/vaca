@@ -57,4 +57,4 @@ call       = { "(" ~ form+ ~ ")" }
 code_block = { "{" ~ form* ~ "}" }
 
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
-COMMENT    = _{ ";" ~ (!";" ~ ANY)* ~ ";" | ";" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+COMMENT    = _{ ";;" ~ (!";;" ~ ANY)* ~ ";;" | ";" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
