@@ -1,6 +1,6 @@
 use std::{collections::LinkedList, rc::Rc};
 
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use crate::{Value, Symbol, ErrorStack};
 
 /// The structure that register our definitions using the `#( ... )` syntax
@@ -42,6 +42,23 @@ impl SymbolTable {
             None => Err(ErrorStack::Top { src: None, msg: format!("Use of undefined symbol `{}`. Maybe you misspeled or the symbol's scope got dropped", symbol) }
             ),
         }
+    }
+
+    pub fn env(&self) -> Vec<(String, String)> {
+        let mut seen = FxHashSet::default();
+        let mut result = Vec::new();
+
+        for table in self.tables.iter().rev() {
+            for (key, value) in table {
+                if seen.contains(key) {
+                    continue;
+                }
+                seen.insert(key);
+                result.push((key.to_string(), value.to_string()));
+            }
+        }
+
+        result
     }
 
 }
