@@ -1,4 +1,4 @@
-program = { form* }
+program = { vacaimport* ~ form* }
 
 lib = {
   export_list ~
@@ -29,10 +29,10 @@ literal = {
 }
 
 keyword   = { bool | nil }
-operators = { ":" | "<(" | "[(" | "#(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
+operators = { ":" | "<)" | "(>" | "<(" | "[(" | "#(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
 
 symbol = @{
-  !keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")*
+  !keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-" | "/")*
 | !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "(" | ")" | "-" | "+" | "=" | "'" | "`" | "[" | "]" | "{" | "}" | "~" | "^" | ":" | ">" | "<" | "." | "," | "|" | "\\" | "/" | "?")+
 }
 
@@ -64,6 +64,7 @@ array_list = { "[" ~ form* ~ "]" }
 
 function   = { "<(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form ~ ")" }
 macrodef   = { "[(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form ~ ")" }
+vacaimport   = { "<)" ~ symbol ~ symbol ~ ("->" ~ symbol+)?~ "(>" }
 call       = { "(" ~ form+ ~ ")" }
 code_block = { "{" ~ form* ~ "}" }
 
