@@ -1,21 +1,21 @@
 use pest::{Parser, iterators::Pair};
 use pest_derive::Parser;
-use vaca_core::{Form, Symbol, form::Literal};
+use vaca_core::{Form, Symbol, form::Literal, ErrorStack};
 
 #[derive(Parser)]
 #[grammar = "./parser/grammar.pest"]
 pub struct VacaParser;
 
-pub fn parse(form: String) -> Result<Form, String>{
+pub fn parse(form: String) -> Result<Form, ErrorStack>{
     let res = VacaParser::parse(Rule::form, &form);
 
     match res {
         Ok(mut pairs) => pair_walk(pairs.next().unwrap()),
-        Err(e) => Err(format!("{}", e)),
+        Err(e) => Err(format!("{}", e).into()),
     }
 }
 
-fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, String>{
+fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
     match pair.as_rule() {
         // Unreachble
         Rule::keyword => unreachable!(),
@@ -118,7 +118,7 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, String>{
 
                 match &func {
                     Form::Function(_, _) | Form::CodeBlock(_) | Form::Literal(Literal::Symbol(_)) | Form::Call(_, _) => Ok(Form::Call(Box::new(func), iter.collect())),
-                    e => Err(format!("Passing {e:?} as a callable function, but it isn't"))
+                    e => Err(format!("Passing {e:?} as a callable function, but it isn't").into())
                 }
             }
         },
