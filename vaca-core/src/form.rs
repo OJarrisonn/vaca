@@ -79,7 +79,7 @@ impl Form {
 
                             match args {
                                 Err(e) => Err(e),
-                                Ok(args) => f.exec(args.as_vec(), table)
+                                Ok(args) => f.exec(args.to_array(), table)
                             }
                         },
                         Value::Macro(m) => {
