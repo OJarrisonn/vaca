@@ -6,8 +6,8 @@ use vaca_core::{Form, Symbol, form::Literal, ErrorStack};
 #[grammar = "./parser/grammar.pest"]
 pub struct VacaParser;
 
-pub fn parse(form: String) -> Result<Form, ErrorStack>{
-    let res = VacaParser::parse(Rule::form, &form);
+pub fn parse_program(form: String) -> Result<Form, ErrorStack>{
+    let res = VacaParser::parse(Rule::program, &form);
 
     match res {
         Ok(mut pairs) => pair_walk(pairs.next().unwrap()),
@@ -16,6 +16,7 @@ pub fn parse(form: String) -> Result<Form, ErrorStack>{
 }
 
 fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
+    let src = Some(format!("[L {} C {}]: {}", pair.line_col().0, pair.line_col().1, pair.as_span().as_str()));
     match pair.as_rule() {
         // Unreachble
         Rule::keyword => unreachable!(),
@@ -49,7 +50,7 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
                                 acc.push((symbol, *form));
                                 Ok(acc)
                             },
-                            Ok(_) => panic!("This must be an assinment"),
+                            Ok(_) => panic!("This must be an assignment"),
                             Err(e) => Err(e)
                         },
                         e => e
@@ -107,31 +108,36 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
             Ok(Form::Function(params, Box::new(body)))
         },
         Rule::call => {
-            let res = pair.into_inner()
-                .map(|pair| pair_walk(pair));
+            let res: Result<Vec<Form>, ErrorStack> = pair.clone().into_inner()
+                .map(|pair| pair_walk(pair))
+                .collect();
 
-            if let Some(err) = res.clone().into_iter().find(|r| r.is_err()) {
-                err
-            } else {
-                let mut iter = res.map(|e| e.unwrap());
-                let func = iter.next().expect("There should be a first Formession in the function");
+            match res {
+                Err(e) => Err(ErrorStack::Stream { src, from: Box::new(e), note: Some("During parsing of a `Form` in a `Call`".into()) }),
+                Ok(vec) => {
+                    let mut iter = vec.into_iter();
 
-                match &func {
-                    Form::Function(_, _) | Form::CodeBlock(_) | Form::Literal(Literal::Symbol(_)) | Form::Call(_, _) => Ok(Form::Call(Box::new(func), iter.collect())),
-                    e => Err(format!("Passing {e:?} as a callable function, but it isn't").into())
+                    match iter.next() {
+                        Some(func) => match func {
+                            Form::Function(_, _) | Form::CodeBlock(_) | Form::Literal(Literal::Symbol(_)) | Form::Call(_, _) => Ok(Form::Call(Box::new(func), iter.collect())),
+                            e => Err(ErrorStack::Top{ src, msg: format!("Passing {e:?} as a callable, but it isn't") })
+                        },
+                        None => Err(ErrorStack::Top { src, msg: "Empty call not allowed".into() }),
+                    }
                 }
             }
         },
-        Rule::code_block => {
-            let res = pair.into_inner()
-                .map(|pair| pair_walk(pair));
+        Rule::code_block | Rule::program => {
+            let res: Result<Vec<Form>, ErrorStack> = pair.into_inner()
+                .map(|pair| pair_walk(pair))
+                .collect();
             
-            if let Some(err) = res.clone().into_iter().find(|r| r.is_err()) {
-                err
-            } else {
-                Ok(Form::CodeBlock(res.map(|e| e.unwrap()).collect()))
-            }
+            res.map(|ok| Form::CodeBlock(ok)).map_err(|err| ErrorStack::Stream { src: src, from: Box::new(err), note: Some("During parsing of a `Form` of a `Block`".into()) })
         },
+        Rule::lib => Err(ErrorStack::Top { src, msg: "Libraries aren't implemented yet".into() }),
+        Rule::dontcare => Err(ErrorStack::Top { src, msg: "Don't Cares aren't implemented yet".into() }),
+        Rule::macrodef => todo!(),
+        Rule::vacaimport => todo!(),
     }
 }
 

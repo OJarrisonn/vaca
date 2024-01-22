@@ -1,7 +1,7 @@
 use vaca_core::ErrorStack;
 use speedy::Writable;
 
-use crate::parse;
+use crate::parse_program;
 
 
 
@@ -13,7 +13,7 @@ pub fn build(input: String, output: Option<String>) -> Result<(), Box<dyn std::e
     }
 
     let source = std::fs::read_to_string(&input)?;
-    let compiled = parse(format!("{{{}}}", source));
+    let compiled = parse_program(source);
 
     let output = output.unwrap_or(input.replace(".vaca", ".casco"));
 

@@ -1,4 +1,4 @@
-use vaca_build::parse;
+use vaca_build as build;
 use vaca_core::{SymbolTable, Value};
 use vaca_stl as stl;
 
@@ -72,7 +72,7 @@ impl Repl {
             
             let _ = editor.add_history_entry(&input);
 
-            let program = match parse(input) {
+            let program = match build::parse_program(input) {
                 Ok(program) => program,
                 Err(e) => {
                     eprintln!("!>> \n{e}");
