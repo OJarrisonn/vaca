@@ -5,6 +5,7 @@ use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, val
 mod parse;
 
 pub fn load(table: &mut SymbolTable) {
+    register!(table, "format", function!(print, "values"));
     register!(table, "print", function!(print, "text"));
     register!(table, "println", function!(println, "text"));
     register!(table, "readln", function!(readln));
@@ -46,4 +47,18 @@ pub fn readln(_table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
     let _ = std::io::stdin().read_line(&mut line);
     
     Ok(Rc::new(Value::String(line.trim().to_string())))
+}
+
+pub fn format(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    let values = lookup!(table, "values")?;
+
+    let formated = match values.as_ref() {
+        Value::Array(list) => list.iter()
+            .map(|t| t.to_string())
+            .collect::<Vec<String>>()
+            .join(""),
+        d => d.to_string()
+    };
+    
+    Ok(Rc::new(Value::String(formated)))
 }
