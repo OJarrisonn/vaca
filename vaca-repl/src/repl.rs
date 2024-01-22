@@ -67,7 +67,7 @@ impl Repl {
 
             if input.trim() == ";" { break; }
             if input.trim() == ";clear" { let _ = editor.clear_screen()?; continue }
-            //if input.trim() == ";env" { table.env().iter().for_each(|(s, v)| println!("{s}\t=> \t{v}")); continue }
+            if input.trim() == ";env" { self.table.env().iter().for_each(|(s, v)| println!("{s}\t=> \t{v}")); continue }
             if input.trim() == "" { continue; }
             
             let _ = editor.add_history_entry(&input);

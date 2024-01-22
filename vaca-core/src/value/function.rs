@@ -2,6 +2,8 @@ use std::{iter::zip, rc::Rc};
 
 use crate::{Symbol, Value, SymbolTable, Form, ErrorStack};
 
+use super::array::Array;
+
 #[derive(Debug, Clone)]
 pub struct Function {
     arity: usize,
@@ -39,7 +41,7 @@ impl Function {
         self.arity
     }
 
-    pub fn exec(&self, source_args: Vec<Rc<Value>>, table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    pub fn exec(&self, source_args: Array, table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
         if self.arity < source_args.len() {
             return Err(ErrorStack::Top { 
                 src: self.body.as_ref().map(|b| b.to_string()), 
@@ -67,7 +69,7 @@ impl Function {
         return res;
     }
 
-    pub fn partial(source: &Self, args: Vec<Rc<Value>>) -> Self {
+    pub fn partial(source: &Self, args: Array) -> Self {
         let mut source = source.clone();
         source.arity -= args.len();
         source.partials.extend(args.into_iter());
