@@ -5,7 +5,7 @@ use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, val
 mod parse;
 
 pub fn load(table: &mut SymbolTable) {
-    register!(table, "format", function!(print, "values"));
+    register!(table, "format", function!(format, "values"));
     register!(table, "print", function!(print, "text"));
     register!(table, "println", function!(println, "text"));
     register!(table, "readln", function!(readln));
