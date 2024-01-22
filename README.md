@@ -137,6 +137,7 @@ No spaces are allowed in the path
 - [x] Rename .leite to .casco
 - [ ] STL
     - [ ] math lib
+      - [x] NaN
     - [ ] array lib
     - [ ] string lib
 - [ ] Error Callstack
