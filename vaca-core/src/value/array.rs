@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{collections::LinkedList, rc::Rc};
 use crate::Value;
 
-pub type Array = Vec<Rc<Value>>;
+pub type Array = LinkedList<Rc<Value>>;
