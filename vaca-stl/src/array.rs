@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::function::Function, ErrorStack};
+use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::{array::Array, function::Function}, ErrorStack};
 
 pub fn load(table: &mut SymbolTable) {
     register!(table, "nth", function!(nth, "index", "array"));
@@ -34,7 +34,7 @@ fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
             index as usize
         };
 
-        Ok(Rc::clone(&array[index]))
+        Ok(Rc::clone(&array.iter().nth(index).unwrap()))
     }
 }
 
@@ -42,7 +42,7 @@ fn prepend(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
     let item = lookup!(table, "item")?;
     let mut array = lookup!(table, "array")?.to_array();
 
-    array.insert(0, item);
+    array.push_front(item);
 
     Ok(Rc::new(Value::Array(array)))
 }
@@ -51,7 +51,7 @@ fn append(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
     let item = lookup!(table, "item")?;
     let mut array = lookup!(table, "array")?.to_array();
 
-    array.push(item);
+    array.push_back(item);
 
     Ok(Rc::new(Value::Array(array)))
 }
@@ -76,7 +76,7 @@ fn map(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
     let mut array = lookup!(table, "array")?.to_array();
 
     for item in array.iter_mut() {
-        *item = f.exec(vec![item.clone()], table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
+        *item = f.exec(Array::from([item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
     }
 
     Ok(Rc::new(Value::Array(array)))
@@ -94,7 +94,7 @@ fn reduce(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
     let array = lookup!(table, "array")?.to_array();
 
     for item in array.iter() {
-        acc = f.exec(vec![acc, item.clone()], table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
+        acc = f.exec(Array::from([acc, item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
     }
 
     Ok(acc)
@@ -112,7 +112,7 @@ fn scan(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
     let mut array = lookup!(table, "array")?.to_array();
 
     for item in array.iter_mut() {
-        acc = f.exec(vec![acc, item.clone()], table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
+        acc = f.exec(Array::from([acc, item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
         *item = acc.clone();
     }
 
