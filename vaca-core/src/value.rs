@@ -1,4 +1,4 @@
-use std::{rc::Rc, fmt::Display, iter::zip};
+use std::{fmt::Display, iter::zip};
 
 use self::{function::Function, macros::NativeMacro, array::Array};
 
