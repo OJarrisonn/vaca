@@ -1,6 +1,6 @@
 use pest::{Parser, iterators::Pair};
 use pest_derive::Parser;
-use vaca_core::{Form, Symbol, form::Literal, ErrorStack};
+use vaca_core::{form::Literal, ErrorStack, Form, Symbol};
 
 #[derive(Parser)]
 #[grammar = "./parser/grammar.pest"]
@@ -116,6 +116,22 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
 
             Ok(Form::Function(params, Box::new(body)))
         },
+        Rule::macrodef => {
+            let mut params = vec![];
+            let mut body = vec![];
+
+            for p in pair.into_inner() {
+                match p.as_rule() {
+                    Rule::symbol => params.push(p.as_str().into()),
+                    Rule::form => body.push(pair_walk(p)?),
+                    _ => panic!("No other rule should be inside a function rule")
+                }
+            }
+
+            let body = Form::CodeBlock(body);
+
+            Ok(Form::Macro(params, Box::new(body)))
+        },
         Rule::call => {
             let res: Result<Vec<Form>, ErrorStack> = pair.clone().into_inner()
                 .map(|pair| pair_walk(pair))
@@ -145,19 +161,6 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
         },
         Rule::lib => Err(ErrorStack::Top { src, msg: "Libraries aren't implemented yet".into() }),
         Rule::dontcare => Err(ErrorStack::Top { src, msg: "Don't Cares aren't implemented yet".into() }),
-        Rule::macrodef => todo!(),
         Rule::vacaimport => todo!(),
-    }
-}
-
-#[cfg(tests)]
-mod tests {
-    use std::fs;
-
-    use super::parse;
-
-    #[test]
-    fn crude_parse() {
-        let _ = dbg!(parse(format!("{{{}}}", fs::read_to_string("./tests/hello_world.vaca").unwrap())));
     }
 }

@@ -1,6 +1,6 @@
 use std::{fmt::Display, iter::zip};
 
-use self::{function::Function, macros::NativeMacro, array::Array};
+use self::{function::Function, macros::Macro, array::Array};
 
 pub mod function;
 pub mod macros;
@@ -19,7 +19,7 @@ pub enum Value {
     String(String),
     Array(Array),
     Function(Function),
-    Macro(NativeMacro)
+    Macro(Macro)
 }
 
 impl Into<Array> for Value {
@@ -71,7 +71,7 @@ impl Display for Value {
                 .unwrap_or(String::from(""))
             ),
             Self::Function(f) => format!("'func\\{}", f.arity()),
-            Self::Macro(_) => format!("'macro"),
+            Self::Macro(m) => format!("'macro\\{}", m.arity()),
             Self::String(s) => s.clone()
         })
     }

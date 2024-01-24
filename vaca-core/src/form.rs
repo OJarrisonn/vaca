@@ -1,7 +1,7 @@
-use std::{rc::Rc, fmt::Display};
+use std::{collections::LinkedList, fmt::Display, rc::Rc};
 use speedy::{Readable, Writable};
 
-use crate::{Value, Symbol, value::{array::Array, function::Function}, SymbolTable, ErrorStack};
+use crate::{Value, Symbol, value::{array::Array, function::Function, macros::Macro}, SymbolTable, ErrorStack};
 
 
 #[derive(Debug, Clone, Readable, Writable)]
@@ -10,6 +10,7 @@ pub enum Form {
     Assingment(Symbol, Box<Form>),
     CodeBlock(Vec<Form>),
     Function(Vec<Symbol>, Box<Form>),
+    Macro(Vec<Symbol>, Box<Form>),
     Call(Box<Form>, Vec<Form>),
     Array(Vec<Form>),
     Literal(Literal)
@@ -64,6 +65,12 @@ impl Form {
                         Function::new(params.clone(), 
                                       (**body).clone())))
             ),
+            Form::Macro(params, body) => Ok(
+                Rc::new(
+                    Value::Macro(
+                        Macro::defined(params.clone(), 
+                                      (**body).clone())))
+            ),
 
             Form::Call(func, args) => {
                 let func = func.eval(table);
@@ -81,7 +88,12 @@ impl Form {
                             }
                         },
                         Value::Macro(m) => {
-                            m(table, args).map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
+                            let mut forms = LinkedList::new();
+                            for arg in args.iter() {
+                                forms.push_back(arg.clone())
+                            }
+
+                            m.exec(table, forms).map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
                         }
                         d => if args.len() == 0 {
                             Ok(func)
@@ -113,6 +125,44 @@ impl Form {
                 }
             },
             Form::Literal(l) => l.eval(table).map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None }),
+        }
+    }
+
+    pub fn replace_symbol(self, symbol: &Symbol, form: &Self) -> Self {
+        match self {
+            Form::AssingmentList(list) => Self::AssingmentList(list.into_iter()
+                .map(|(s, f)| 
+                    (s, f.replace_symbol(symbol, form)))
+                .collect()),
+            Form::Assingment(_, _) => unreachable!(),
+            Form::CodeBlock(block) => Form::CodeBlock(block.into_iter()
+                .map(move  |f| 
+                    f.replace_symbol(symbol, form))
+                .collect()),
+            Form::Function(params, body) => {
+                let body = if !params.contains(symbol) {
+                    body.replace_symbol(symbol, form)
+                } else { 
+                    *body
+                };
+                Form::Function(params, Box::new(body))
+            },
+            Form::Macro(params, body) => {
+                let body = if !params.contains(symbol) {
+                    body.replace_symbol(symbol, form)
+                } else { 
+                    *body
+                };
+                Form::Macro(params, Box::new(body))
+            },
+            Form::Call(call, args) => Form::Call(
+                Box::new(call.replace_symbol(symbol, form)), 
+                args.into_iter().map(|f| f.replace_symbol(symbol, form)).collect()),
+            Form::Array(array) => Form::Array(array.into_iter().map(|f| f.replace_symbol(symbol, form)).collect()),
+            Form::Literal(l) => match l {
+                Literal::Symbol(s) => if &s == symbol { form.clone() } else { Form::Literal(Literal::Symbol(s)) },
+                l => Form::Literal(l)
+            },
         }
     }
 }
@@ -153,6 +203,19 @@ impl Display for Form {
             },
             Form::Function(args, body) => {
                 write!(f, "<( ")?;
+                
+                for s in args.iter() {
+                    write!(f, "{} ", s)?
+                }
+
+                if args.len() > 0 {
+                    write!(f, "-> ")?;
+                }
+
+                write!(f, "{} )", body)
+            },
+            Form::Macro(args, body) => {
+                write!(f, "[( ")?;
                 
                 for s in args.iter() {
                     write!(f, "{} ", s)?
