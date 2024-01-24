@@ -1,10 +1,10 @@
 use std::rc::Rc;
 
-use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, Form, function, value::function::Function, ErrorStack};
+use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, Form, function, value::{function::Function, macros::Macro}, ErrorStack};
 
 pub fn load(table: &mut SymbolTable) {
-    register!(table, "if", Value::Macro(if_macro));
-    register!(table, "assert", Value::Macro(assert));
+    register!(table, "if", Value::Macro(Macro::native(3, if_macro)));
+    register!(table, "assert", Value::Macro(Macro::native(0, assert)));
     register!(table, "==", function!(eq, "a", "b"));
     register!(table, "!=", function!(neq, "a", "b"));
     register!(table, "<", function!(lt, "a", "b"));
@@ -15,7 +15,7 @@ pub fn load(table: &mut SymbolTable) {
     register!(table, "|", function!(or, "a", "b"));
 }
 
-fn if_macro(table: &mut SymbolTable, args: &Vec<Form>) -> Result<Rc<Value>, ErrorStack> {
+fn if_macro(table: &mut SymbolTable, args: Vec<Form>) -> Result<Rc<Value>, ErrorStack> {
     if args.len() != 3 {
         return Err(format!("Wrong argument count for if. Needed a condition, a truth expression and a fake expression").into())
     }
@@ -31,7 +31,7 @@ fn if_macro(table: &mut SymbolTable, args: &Vec<Form>) -> Result<Rc<Value>, Erro
 }
 
 
-fn assert(table: &mut SymbolTable, args: &Vec<Form>) -> Result<Rc<Value>, ErrorStack> {
+fn assert(table: &mut SymbolTable, args: Vec<Form>) -> Result<Rc<Value>, ErrorStack> {
     for arg in args.iter() {
         if !arg.eval(table).map_err(|err| ErrorStack::Stream { src: Some(arg.to_string()), from: Box::new(err), note: None })?.as_boolean() {
             return Err(ErrorStack::Top { src: Some(arg.to_string()), msg: "Assertion failed".into() })
