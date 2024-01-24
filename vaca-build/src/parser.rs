@@ -15,6 +15,15 @@ pub fn parse_program(form: String) -> Result<Form, ErrorStack>{
     }
 }
 
+pub fn parse_form(form: String) -> Result<Form, ErrorStack>{
+    let res = VacaParser::parse(Rule::form, &form);
+
+    match res {
+        Ok(mut pairs) => pair_walk(pairs.next().unwrap()),
+        Err(e) => Err(format!("{}", e).into()),
+    }
+}
+
 fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
     let src = Some(format!("[L {} C {}]: {}", pair.line_col().0, pair.line_col().1, pair.as_span().as_str()));
     match pair.as_rule() {

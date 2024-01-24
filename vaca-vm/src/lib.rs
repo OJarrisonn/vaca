@@ -20,7 +20,7 @@ pub fn run(filename: String) -> Result<(), Box<dyn std::error::Error>> {
     } else {
         let source = std::fs::read_to_string(filename)?;
     
-        build::parse_program(format!("{{{}}}", source))?        
+        build::parse_program(source)?        
     };
 
     let res = match program.eval(&mut table) {
