@@ -6,7 +6,6 @@ use envconfig::Envconfig;
 use vaca_repl::{Repl, Settings};
 use vaca_vm;
 
-const VERSION: &str = "0.5.6";
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
@@ -30,11 +29,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let res = match cli.command {
         Some(cmd) => match cmd {
-            cli::Commands::Repl => repl(VERSION),
+            cli::Commands::Repl => repl(clap::crate_version!()),
             cli::Commands::Run(RunArgs { file: filename }) => vaca_vm::run(filename),
             cli::Commands::Build(BuildArgs { input, output}) => vaca_build::build(input, output)    
         },
-        None => repl(VERSION)
+        None => repl(clap::crate_version!())
     };
 
     match res {

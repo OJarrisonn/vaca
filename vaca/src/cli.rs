@@ -17,7 +17,7 @@ pub enum Commands {
     Repl,
     /// Runs a .vaca or .casco file
     Run(RunArgs),
-    /// Builds a .vaca file an generates a .casci binary file
+    /// Builds a .vaca file an generates a .casco binary file
     Build(BuildArgs)
 }
 
