@@ -1,5 +1,5 @@
 use vaca_core::*;
-use vaca_build;
+use vaca_build as build;
 use vaca_stl as stl;
 
 use speedy::Readable;
@@ -20,7 +20,7 @@ pub fn run(filename: String) -> Result<(), Box<dyn std::error::Error>> {
     } else {
         let source = std::fs::read_to_string(filename)?;
     
-        vaca_build::parse(format!("{{{}}}", source))?        
+        build::parse_program(source)?        
     };
 
     let res = match program.eval(&mut table) {

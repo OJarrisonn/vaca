@@ -1,11 +1,20 @@
+program = { vacaimport* ~ form* }
+
+lib = {
+  export_list ~
+  assingment_list*
+}
+
 form = {
   assingment_list
 | export_list
-| array_list
 | function
+| macrodef
+| array_list
 | code_block
 | call
 | literal
+| dontcare
 }
 
 literal = {
@@ -20,14 +29,15 @@ literal = {
 }
 
 keyword   = { bool | nil }
-operators = { "$" | "<(" | "#(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
+operators = { ":" | "<)" | "(>" | "<(" | "[(" | "#(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
 
 symbol = @{
-  !keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")*
+  !keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-" | "/")*
 | !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "(" | ")" | "-" | "+" | "=" | "'" | "`" | "[" | "]" | "{" | "}" | "~" | "^" | ":" | ">" | "<" | "." | "," | "|" | "\\" | "/" | "?")+
 }
 
-atom           = @{ "$" ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
+dontcare = { "_" }
+atom           = @{ ":" ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
 float          = @{ "-"? ~ ('0'..'9')* ~ "." ~ ('0'..'9')+ | ('0'..'9')+ ~ "." ~ ('0'..'9')* }
 integer        = @{ "-"? ~ ('0'..'9')+ }
 
@@ -52,7 +62,9 @@ assingment      = { symbol ~ form }
 
 array_list = { "[" ~ form* ~ "]" }
 
-function   = { "<(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form+ ~ ")" }
+function   = { "<(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form ~ ")" }
+macrodef   = { "[(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form ~ ")" }
+vacaimport   = { "<)" ~ symbol ~ symbol ~ ("->" ~ symbol+)?~ "(>" }
 call       = { "(" ~ form+ ~ ")" }
 code_block = { "{" ~ form* ~ "}" }
 
