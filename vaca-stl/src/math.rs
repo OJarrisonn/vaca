@@ -18,8 +18,8 @@ pub fn load(table: &mut SymbolTable) {
 
 
 fn generic(table: &mut SymbolTable, f: impl Fn(&f64, &f64) -> f64) -> Result<Rc<Value>, ErrorStack> {
-    let a = lookup!(table, "a").unwrap();
-    let b = lookup!(table, "b").unwrap();
+    let a = lookup!(table, "a")?;
+    let b = lookup!(table, "b")?;
 
     let res = match (a.as_ref(), b.as_ref()) {
         (Value::Integer(a), Value::Integer(b)) => { 
@@ -33,9 +33,9 @@ fn generic(table: &mut SymbolTable, f: impl Fn(&f64, &f64) -> f64) -> Result<Rc<
         (Value::Float(a), Value::Integer(b)) => Value::Float(f(a, &(*b as f64))),
         (Value::Integer(a), Value::Float(b)) => Value::Float(f(&(*a as f64), b)),
         (Value::Float(a), Value::Float(b)) => Value::Float(f(a, b)),
-        (Value::Integer(_), _) | (Value::Float(_), _) => return Err(format!("Argument `b` should be a numeric value not {b}").into()),
-        (_, Value::Integer(_)) | (_, Value::Float(_)) => return Err(format!("Argument `a` should be a numeric value not {a}").into()),
-        (_, _) => return Err(format!("Arguments for `a` and `b` should be numeric values not {a} and {b}").into())
+        (Value::Integer(_), _) | (Value::Float(_), _) => return Err(format!("Argument `b` should be a numeric value not `{b}`").into()),
+        (_, Value::Integer(_)) | (_, Value::Float(_)) => return Err(format!("Argument `a` should be a numeric value not `{a}`").into()),
+        (_, _) => return Err(format!("Arguments for `a` and `b` should be numeric values not `{a}` and `{b}`").into())
     };
 
     let res = match res {

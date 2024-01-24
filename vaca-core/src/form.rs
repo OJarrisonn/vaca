@@ -38,10 +38,7 @@ impl Form {
                 Ok(Rc::new(Value::Nil))
             },
             Form::Assingment(_, _) => {
-                //{ table.insert(symbol.clone(), expr.eval(table)?); }
                 panic!("Shouldn't eval over a single assingment");
-
-                //Ok(owner.insert(Value::Nil))
             }
 
             Form::CodeBlock(b) => { 
@@ -72,13 +69,13 @@ impl Form {
                 let func = func.eval(table);
 
                 match func {
-                    Err(e) => Err(e),
+                    Err(err) => Err(ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: Some("Error happened while trying to evaluate the callable part of the current call".into()) }),
                     Ok(func) => match func.as_ref() {
                         Value::Function(f) => {
                             let args = Form::Array(args.clone()).eval(table);
 
                             match args {
-                                Err(e) => Err(e),
+                                Err(err) => Err(ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: Some("Error happened while evaluating an argument of the current call".into()) }),
                                 Ok(args) => f.exec(args.to_array(), table)
                                     .map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
                             }
@@ -102,16 +99,16 @@ impl Form {
             Form::Array(a) => { 
                 let res = a.iter()
                     .map(|e| e.eval(table))
-                    .fold(Ok(Array::new()), |acc, e| match acc {
+                    .fold(Ok(Array::new()), |acc, item| match acc {
                         Err(e) => Err(e),
-                        Ok(mut v) => match e {
+                        Ok(mut v) => match item {
                             Err(e) => Err(e),
                             Ok(d) => { v.push_back(d); Ok(v) },
                         }
                     });
 
                 match res {
-                    Err(e) => Err(e),
+                    Err(err) => Err(ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: Some("Error happened while evaluating an item of the current array".into()) }),
                     Ok(d) => Ok(Rc::new(Value::Array(d))),
                 }
             },
@@ -194,8 +191,8 @@ impl Display for Literal {
             Self::Nil => "nil".to_string(),
             Self::Integer(i) => format!("{i}"),
             Self::Float(f) => format!("{f}"),
-            Self::Char(c) => c.to_string(),
-            Self::String(s) => s.to_string(),
+            Self::Char(c) => format!("'{c}'"),
+            Self::String(s) => format!("\"{s}\""),
             Self::Bool(b) => b.to_string(),
             Self::Symbol(s) => s.to_string(),
         })

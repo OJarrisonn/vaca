@@ -42,8 +42,8 @@ fn assert(table: &mut SymbolTable, args: &Vec<Form>) -> Result<Rc<Value>, ErrorS
 }
 
 fn generic_rel(table: &mut SymbolTable, f: impl Fn(&Value, &Value) -> bool) -> Result<Rc<Value>, ErrorStack> {
-    let a = lookup!(table, "a").unwrap();
-    let b = lookup!(table, "b").unwrap();
+    let a = lookup!(table, "a")?;
+    let b = lookup!(table, "b")?;
 
     match (a.as_ref(), b.as_ref()) {
         (Value::Function(_), _) => Err(format!("Argument for `a` is a function which isn't comparable").into()),
@@ -57,7 +57,8 @@ fn generic_rel(table: &mut SymbolTable, f: impl Fn(&Value, &Value) -> bool) -> R
         (Value::String(_), Value::String(_)) |
         (Value::Array(_), Value::Array(_)) |
         (Value::Nil, Value::Nil) => Ok(Rc::new(Value::Bool(f(a.as_ref(), b.as_ref())))),
-        (a, b) => Err(format!("Trying to compare {a} with {b} which isn't possible").into()) 
+        _ => Ok(Rc::new(Value::Bool(false)))
+        //(a, b) => Err(format!("Trying to compare `{a}` with `{b}` which isn't possible").into()) 
     }
 }
 
@@ -86,14 +87,14 @@ fn le(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
 }
 
 fn generic_bool(table: &mut SymbolTable, f: impl Fn(bool, bool) -> bool) -> Result<Rc<Value>, ErrorStack> {
-    let a = lookup!(table, "a").unwrap();
-    let b = lookup!(table, "b").unwrap();
+    let a = lookup!(table, "a")?;
+    let b = lookup!(table, "b")?;
 
     match (a.as_ref(), b.as_ref()) {
         (Value::Bool(bl), Value::Bool(br)) => Ok(Rc::new(Value::Bool(f(*bl, *br)))),
-        (Value::Bool(_), _) => Err(format!("Argument `b` should be a boolean value not {b}").into()),
-        (_, Value::Bool(_)) => Err(format!("Argument `a` should be a boolean value not {a}").into()),
-        (a, b) => Err(format!("Trying boolean operation between {a} with {b} which isn't possible").into())
+        (Value::Bool(_), _) => Err(format!("Argument `b` should be a boolean value not `{b}`").into()),
+        (_, Value::Bool(_)) => Err(format!("Argument `a` should be a boolean value not `{a}`").into()),
+        (a, b) => Err(format!("Trying boolean operation between `{a}` with `{b}` which isn't possible").into())
     }
 }
 
