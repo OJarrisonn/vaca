@@ -1,4 +1,6 @@
-use std::{fmt::Display, iter::zip};
+use std::{fmt::Display, iter::zip, rc::Rc};
+
+use crate::{form::call::Call, ErrorStack, SymbolTable};
 
 use self::{function::Function, macros::Macro, array::Array};
 
@@ -19,7 +21,8 @@ pub enum Value {
     String(String),
     Array(Array),
     Function(Function),
-    Macro(Macro)
+    Macro(Macro),
+    LazyCall(Call)
 }
 
 impl Into<Array> for Value {
@@ -31,7 +34,23 @@ impl Into<Array> for Value {
     }
 }
 
+pub fn strict_eval(table: &mut SymbolTable, mut value: Rc<Value>) -> Result<Rc<Value>, ErrorStack> {
+    while let Value::LazyCall(call) = value.as_ref()  {
+        value = call.exec(table)?
+    }
+
+    Ok(value)
+}
+
 impl Value {
+    pub fn is_lazy(&self) -> bool {
+        if let Self::LazyCall(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
     /// Copies the Value and unwraps an array
     pub fn to_array(&self) -> Array {
         match self {
@@ -52,6 +71,7 @@ impl Value {
             Value::Array(a) => a.len() != 0,
             Value::Function(_) => false,
             Value::Macro(_) => false,
+            Value::LazyCall(_) => panic!("Lazy calls must be strict evaluated")
         }
     }
 }
@@ -72,7 +92,8 @@ impl Display for Value {
             ),
             Self::Function(f) => format!("'func\\{}", f.arity()),
             Self::Macro(m) => format!("'macro\\{}", m.arity()),
-            Self::String(s) => s.clone()
+            Self::String(s) => s.clone(),
+            Self::LazyCall(_) => panic!("Lazy calls must be evaluated")
         })
     }
 }

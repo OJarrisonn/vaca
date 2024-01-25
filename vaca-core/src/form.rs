@@ -1,8 +1,11 @@
-use std::{collections::LinkedList, fmt::Display, rc::Rc};
+use std::{fmt::Display, rc::Rc};
 use speedy::{Readable, Writable};
 
 use crate::{Value, Symbol, value::{array::Array, function::Function, macros::Macro}, SymbolTable, ErrorStack};
 
+use self::call::Call;
+
+pub mod call;
 
 #[derive(Debug, Clone, Readable, Writable)]
 pub enum Form {
@@ -11,7 +14,8 @@ pub enum Form {
     CodeBlock(Vec<Form>),
     Function(Vec<Symbol>, Box<Form>),
     Macro(Vec<Symbol>, Box<Form>),
-    Call(Box<Form>, Vec<Form>),
+    Call(Call),
+    LazyCall(Call),
     Array(Vec<Form>),
     Literal(Literal)
 }
@@ -72,45 +76,55 @@ impl Form {
                                       (**body).clone())))
             ),
 
-            Form::Call(func, args) => {
-                let func = func.eval(table);
+            Form::Call(call) => call.exec(table),
+            Form::LazyCall(call) => Ok(Rc::new(Value::LazyCall(call.clone()))),
 
-                match func {
-                    Err(err) => Err(ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: Some("Error happened while trying to evaluate the callable part of the current call".into()) }),
-                    Ok(func) => match func.as_ref() {
-                        Value::Function(f) => {
-                            let args = Form::Array(args.clone()).eval(table);
+            // let func = call.callable.eval(table);
 
-                            match args {
-                                Err(err) => Err(ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: Some("Error happened while evaluating an argument of the current call".into()) }),
-                                Ok(args) => f.exec(args.to_array(), table)
-                                    .map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
-                            }
-                        },
-                        Value::Macro(m) => {
-                            let mut forms = LinkedList::new();
-                            for arg in args.iter() {
-                                forms.push_back(arg.clone())
-                            }
+            //     match func {
+            //         Err(err) => Err(ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: Some("Error happened while trying to evaluate the callable part of the current call".into()) }),
+            //         Ok(func) => match func.as_ref() {
+            //             Value::Function(f) => {
+            //                 let args = Form::Array(call.arguments.clone()).eval(table);
 
-                            m.exec(table, forms).map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
-                        }
-                        d => if args.len() == 0 {
-                            Ok(func)
-                        } else {
-                            Err(ErrorStack::Top { 
-                                src: Some(self.to_string()), 
-                                msg: format!("Trying call a non function value `{}`", d) 
-                            })
-                        }
-                    },
-                }
-            },
+            //                 match args {
+            //                     Err(err) => Err(ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: Some("Error happened while evaluating an argument of the current call".into()) }),
+            //                     Ok(args) => f.exec(args.to_array(), table)
+            //                         .map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
+            //                 }
+            //             },
+            //             Value::Macro(m) => {
+            //                 let mut forms = LinkedList::new();
+            //                 for arg in call.arguments.iter() {
+            //                     forms.push_back(arg.clone())
+            //                 }
+
+            //                 m.exec(table, forms).map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })
+            //             }
+            //             d => if call.arguments.len() == 0 {
+            //                 Ok(func)
+            //             } else {
+            //                 Err(ErrorStack::Top { 
+            //                     src: Some(self.to_string()), 
+            //                     msg: format!("Trying call a non function value `{}`", d) 
+            //                 })
+            //             }
+            //         },
+            //     }
 
             // Evaluate each expression and put back into an array
             Form::Array(a) => { 
                 let res = a.iter()
-                    .map(|e| e.eval(table))
+                    .map(|e| match e.eval(table) {
+                        Err(e) => Err(e),
+                        Ok(ok) => {
+                            let mut v = ok;
+                            while let Value::LazyCall(l) = v.as_ref() {
+                                v = l.exec(table)?;
+                            }
+                            Ok(v)
+                        }
+                    })
                     .fold(Ok(Array::new()), |acc, item| match acc {
                         Err(e) => Err(e),
                         Ok(mut v) => match item {
@@ -155,9 +169,14 @@ impl Form {
                 };
                 Form::Macro(params, Box::new(body))
             },
-            Form::Call(call, args) => Form::Call(
-                Box::new(call.replace_symbol(symbol, form)), 
-                args.into_iter().map(|f| f.replace_symbol(symbol, form)).collect()),
+            Form::Call(call) => Form::Call(Call {
+                callable: Box::new(call.callable.replace_symbol(symbol, form)),
+                arguments: call.arguments.into_iter().map(|f| f.replace_symbol(symbol, form)).collect(),
+            }),
+            Form::LazyCall(call) => Form::LazyCall(Call {
+                callable: Box::new(call.callable.replace_symbol(symbol, form)),
+                arguments: call.arguments.into_iter().map(|f| f.replace_symbol(symbol, form)).collect(),
+            }),
             Form::Array(array) => Form::Array(array.into_iter().map(|f| f.replace_symbol(symbol, form)).collect()),
             Form::Literal(l) => match l {
                 Literal::Symbol(s) => if &s == symbol { form.clone() } else { Form::Literal(Literal::Symbol(s)) },
@@ -227,10 +246,19 @@ impl Display for Form {
 
                 write!(f, "{} )", body)
             },
-            Form::Call(func, args) => {
-                write!(f, "( {func} ")?;
+            Form::Call(Call{callable, arguments}) => {
+                write!(f, "( {callable} ")?;
                 
-                for arg in args.iter() {
+                for arg in arguments.iter() {
+                    write!(f, "{} ", arg)?;
+                }
+
+                write!(f, ")")
+            },
+            Form::LazyCall(Call{callable, arguments}) => {
+                write!(f, "!( {callable} ")?;
+                
+                for arg in arguments.iter() {
                     write!(f, "{} ", arg)?;
                 }
 

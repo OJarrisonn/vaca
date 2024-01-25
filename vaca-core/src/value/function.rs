@@ -58,11 +58,19 @@ impl Function {
 
         zip(&self.params, args).for_each(|(s, v)| table.register(s.clone(), v));
 
-        let res = if self.body.is_none() {
+        let mut res = if self.body.is_none() {
             self.native.unwrap()(table)
         } else {
             self.body.as_ref().unwrap().eval(table)
         };
+
+        while let Ok(ref ok) = res {
+            if let Value::LazyCall(l) = ok.as_ref() {
+                res = l.exec(table)
+            } else {
+                break;
+            }
+        }
 
         table.drop_scope();
 

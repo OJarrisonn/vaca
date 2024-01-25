@@ -56,7 +56,7 @@ impl Macro {
         
         table.create_scope();
 
-        let res = match &self.body {
+        let mut res = match &self.body {
             MacroBody::Defined(def) => {
                 let mut def = def.clone();
                 for (s, f) in zip(self.params.as_ref().unwrap(), forms) {
@@ -67,6 +67,14 @@ impl Macro {
             },
             MacroBody::Native(nat) => nat(table, forms),
         };
+
+        while let Ok(ref ok) = res {
+            if let Value::LazyCall(l) = ok.as_ref() {
+                res = l.exec(table)
+            } else {
+                break;
+            }
+        }
 
         table.drop_scope();
 

@@ -12,6 +12,7 @@ form = {
 | macrodef
 | array_list
 | code_block
+| lazy_call
 | call
 | literal
 | dontcare
@@ -66,6 +67,7 @@ function   = { "<(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form ~ ")" }
 macrodef   = { "[(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form ~ ")" }
 vacaimport   = { "<)" ~ symbol ~ symbol ~ ("->" ~ symbol+)?~ "(>" }
 call       = { "(" ~ form+ ~ ")" }
+lazy_call       = { "!(" ~ form+ ~ ")" }
 code_block = { "{" ~ form* ~ "}" }
 
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }

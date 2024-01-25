@@ -1,6 +1,6 @@
 use pest::{Parser, iterators::Pair};
 use pest_derive::Parser;
-use vaca_core::{form::Literal, ErrorStack, Form, Symbol};
+use vaca_core::{form::{call::Call, Literal}, ErrorStack, Form, Symbol};
 
 #[derive(Parser)]
 #[grammar = "./parser/grammar.pest"]
@@ -144,7 +144,27 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
 
                     match iter.next() {
                         Some(func) => match func {
-                            Form::Function(_, _) | Form::CodeBlock(_) | Form::Literal(Literal::Symbol(_)) | Form::Call(_, _) => Ok(Form::Call(Box::new(func), iter.collect())),
+                            Form::Function(_, _) | Form::CodeBlock(_) | Form::Literal(Literal::Symbol(_)) | Form::Call(_) | Form::LazyCall(_) => Ok(Form::Call(Call {callable: Box::new(func), arguments: iter.collect()})),
+                            e => Err(ErrorStack::Top{ src, msg: format!("Passing {e:?} as a callable, but it isn't") })
+                        },
+                        None => Err(ErrorStack::Top { src, msg: "Empty call not allowed".into() }),
+                    }
+                }
+            }
+        },
+        Rule::lazy_call => {
+            let res: Result<Vec<Form>, ErrorStack> = pair.clone().into_inner()
+                .map(|pair| pair_walk(pair))
+                .collect();
+
+            match res {
+                Err(e) => Err(ErrorStack::Stream { src, from: Box::new(e), note: Some("During parsing of a `Form` in a `Call`".into()) }),
+                Ok(vec) => {
+                    let mut iter = vec.into_iter();
+
+                    match iter.next() {
+                        Some(func) => match func {
+                            Form::Function(_, _) | Form::CodeBlock(_) | Form::Literal(Literal::Symbol(_)) | Form::Call(_) | Form::LazyCall(_) => Ok(Form::LazyCall(Call {callable: Box::new(func), arguments: iter.collect()})),
                             e => Err(ErrorStack::Top{ src, msg: format!("Passing {e:?} as a callable, but it isn't") })
                         },
                         None => Err(ErrorStack::Top { src, msg: "Empty call not allowed".into() }),

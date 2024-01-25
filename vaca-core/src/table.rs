@@ -22,12 +22,14 @@ impl SymbolTable {
     /// Pushes a new empty scope to the top of the scope stack
     pub fn create_scope(&mut self) {
         self.tables.push_back(FxHashMap::default());
+        dbg!(self.tables.len());
     }
 
     /// Drops the last scope in the stack
     /// No assertion that a last scope exists is done, but nothing bad happens if it doesn't exists
     pub fn drop_scope(&mut self) {
         let _ = self.tables.pop_back();
+        dbg!(self.tables.len());
     }
 
     /// Associates a symbol to a new value in the current top scope
