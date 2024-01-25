@@ -1,8 +1,6 @@
-use std::rc::Rc;
+use vaca_core::{lookup, value::valueref::ValueRef, ErrorStack, Symbol, SymbolTable, Value};
 
-use vaca_core::{SymbolTable, Symbol, Value, lookup, ErrorStack};
-
-pub fn parse_int(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+pub fn parse_int(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let text = lookup!(table, "text")?;
 
     let parsed: i64 = match text.as_ref() {
@@ -13,10 +11,10 @@ pub fn parse_int(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
         other => return Err(format!("Can't parse non String {other} into an Int").into())
     };
 
-    Ok(Rc::new(Value::Integer(parsed)))
+    Ok(ValueRef::own(Value::Integer(parsed)))
 }
 
-pub fn parse_float(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+pub fn parse_float(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let text = lookup!(table, "text")?;
 
     let parsed: f64 = match text.as_ref() {
@@ -27,5 +25,5 @@ pub fn parse_float(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
         other => return Err(format!("Can't parse non String {other} into a Float").into())
     };
 
-    Ok(Rc::new(Value::Float(parsed)))
+    Ok(ValueRef::own(Value::Float(parsed)))
 }

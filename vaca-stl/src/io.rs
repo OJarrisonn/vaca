@@ -1,6 +1,6 @@
-use std::{rc::Rc, io::Write};
+use std::io::Write;
 
-use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::function::Function, ErrorStack};
+use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::{function::Function, valueref::ValueRef}, ErrorStack};
 
 mod parse;
 
@@ -13,43 +13,43 @@ pub fn load(table: &mut SymbolTable) {
     register!(table, "parse-float", function!(parse::parse_float, "text"));
 }
 
-pub fn print(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+pub fn print(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let text = lookup!(table, "text")?;
 
     match text.as_ref() {
         Value::Array(list) => list.iter()
-            .for_each(|t| print!("{}", t)),
+            .for_each(|t| print!("{}", t.as_ref())),
         d => print!("{}", d)
     };
 
     let _ = std::io::stdout().flush();
     
-    Ok(Rc::new(Value::Nil))
+    Ok(ValueRef::own(Value::Nil))
 }
 
-pub fn println(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+pub fn println(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let text = lookup!(table, "text")?;
 
     match text.as_ref() {
         Value::Array(list) => list.iter()
-            .for_each(|t| print!("{}", t)),
+            .for_each(|t| print!("{}", t.as_ref())),
         d => print!("{}", d)
     };
 
     println!("");
     
-    Ok(Rc::new(Value::Nil))
+    Ok(ValueRef::own(Value::Nil))
 }
 
-pub fn readln(_table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+pub fn readln(_table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let mut line = String::new();
     
     let _ = std::io::stdin().read_line(&mut line);
     
-    Ok(Rc::new(Value::String(line.trim().to_string())))
+    Ok(ValueRef::own(Value::String(line.trim().to_string())))
 }
 
-pub fn format(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+pub fn format(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let values = lookup!(table, "values")?;
 
     let formated = match values.as_ref() {
@@ -60,5 +60,5 @@ pub fn format(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
         d => d.to_string()
     };
     
-    Ok(Rc::new(Value::String(formated)))
+    Ok(ValueRef::own(Value::String(formated)))
 }

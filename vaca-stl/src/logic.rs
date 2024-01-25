@@ -1,6 +1,4 @@
-use std::rc::Rc;
-
-use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, Form, function, value::{function::Function, macros::Macro}, ErrorStack};
+use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, Form, function, value::{function::Function, macros::Macro, valueref::ValueRef}, ErrorStack};
 
 pub fn load(table: &mut SymbolTable) {
     register!(table, "if", Value::Macro(Macro::native(3, if_macro)));
@@ -15,7 +13,7 @@ pub fn load(table: &mut SymbolTable) {
     register!(table, "|", function!(or, "a", "b"));
 }
 
-fn if_macro(table: &mut SymbolTable, args: Vec<Form>) -> Result<Rc<Value>, ErrorStack> {
+fn if_macro(table: &mut SymbolTable, args: Vec<Form>) -> Result<ValueRef, ErrorStack> {
     if args.len() != 3 {
         return Err(format!("Wrong argument count for if. Needed a condition, a truth expression and a fake expression").into())
     }
@@ -31,17 +29,17 @@ fn if_macro(table: &mut SymbolTable, args: Vec<Form>) -> Result<Rc<Value>, Error
 }
 
 
-fn assert(table: &mut SymbolTable, args: Vec<Form>) -> Result<Rc<Value>, ErrorStack> {
+fn assert(table: &mut SymbolTable, args: Vec<Form>) -> Result<ValueRef, ErrorStack> {
     for arg in args.iter() {
         if !arg.eval(table).map_err(|err| ErrorStack::Stream { src: Some(arg.to_string()), from: Box::new(err), note: None })?.as_boolean() {
             return Err(ErrorStack::Top { src: Some(arg.to_string()), msg: "Assertion failed".into() })
         }
     }
 
-    Ok(Rc::new(Value::Bool(true)))
+    Ok(ValueRef::own(Value::Bool(true)))
 }
 
-fn generic_rel(table: &mut SymbolTable, f: impl Fn(&Value, &Value) -> bool) -> Result<Rc<Value>, ErrorStack> {
+fn generic_rel(table: &mut SymbolTable, f: impl Fn(&Value, &Value) -> bool) -> Result<ValueRef, ErrorStack> {
     let a = lookup!(table, "a")?;
     let b = lookup!(table, "b")?;
 
@@ -56,52 +54,52 @@ fn generic_rel(table: &mut SymbolTable, f: impl Fn(&Value, &Value) -> bool) -> R
         (Value::Char(_), Value::Char(_)) |
         (Value::String(_), Value::String(_)) |
         (Value::Array(_), Value::Array(_)) |
-        (Value::Nil, Value::Nil) => Ok(Rc::new(Value::Bool(f(a.as_ref(), b.as_ref())))),
-        _ => Ok(Rc::new(Value::Bool(false)))
+        (Value::Nil, Value::Nil) => Ok(ValueRef::own(Value::Bool(f(a.as_ref(), b.as_ref())))),
+        _ => Ok(ValueRef::own(Value::Bool(false)))
         //(a, b) => Err(format!("Trying to compare `{a}` with `{b}` which isn't possible").into()) 
     }
 }
 
-fn eq(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn eq(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     generic_rel(table, |a, b| a == b)
 }
 
-fn neq(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn neq(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     generic_rel(table, |a, b| a != b)
 }
 
-fn gt(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn gt(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     generic_rel(table, |a, b| a > b)
 }
 
-fn lt(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn lt(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     generic_rel(table, |a, b| a < b)
 }
 
-fn ge(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn ge(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     generic_rel(table, |a, b| a >= b)
 }
 
-fn le(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn le(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     generic_rel(table, |a, b| a <= b)
 }
 
-fn generic_bool(table: &mut SymbolTable, f: impl Fn(bool, bool) -> bool) -> Result<Rc<Value>, ErrorStack> {
+fn generic_bool(table: &mut SymbolTable, f: impl Fn(bool, bool) -> bool) -> Result<ValueRef, ErrorStack> {
     let a = lookup!(table, "a")?;
     let b = lookup!(table, "b")?;
 
     match (a.as_ref(), b.as_ref()) {
-        (Value::Bool(bl), Value::Bool(br)) => Ok(Rc::new(Value::Bool(f(*bl, *br)))),
-        (Value::Bool(_), _) => Err(format!("Argument `b` should be a boolean value not `{b}`").into()),
-        (_, Value::Bool(_)) => Err(format!("Argument `a` should be a boolean value not `{a}`").into()),
-        (a, b) => Err(format!("Trying boolean operation between `{a}` with `{b}` which isn't possible").into())
+        (Value::Bool(bl), Value::Bool(br)) => Ok(ValueRef::own(Value::Bool(f(*bl, *br)))),
+        (Value::Bool(_), _) => Err(format!("Argument `b` should be a boolean value not `{}`", b.as_ref()).into()),
+        (_, Value::Bool(_)) => Err(format!("Argument `a` should be a boolean value not `{}`", a.as_ref()).into()),
+        (a, b) => Err(format!("Trying boolean operation between `{}` with `{}` which isn't possible", a, b).into())
     }
 }
 
-fn and(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn and(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     generic_bool(table, |a, b| a && b)
 }
 
-fn or(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn or(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     generic_bool(table, |a, b| a || b)
 }

@@ -1,13 +1,13 @@
-use std::{collections::LinkedList, rc::Rc};
+use std::collections::LinkedList;
 
-use vaca_core::{register, sym, value::macros::Macro, ErrorStack, Form, Symbol, SymbolTable, Value};
+use vaca_core::{register, sym, value::{macros::Macro, valueref::ValueRef}, ErrorStack, Form, Symbol, SymbolTable, Value};
 
 pub fn load(table: &mut SymbolTable) {
     register!(table, "|>", Value::Macro(Macro::native(0, pipe_forward)));
 
 }
 
-fn pipe_forward(table: &mut SymbolTable, args: Vec<Form>) -> Result<Rc<Value>, ErrorStack> {
+fn pipe_forward(table: &mut SymbolTable, args: Vec<Form>) -> Result<ValueRef, ErrorStack> {
     let mut iter = args.into_iter();
     let init = iter.next();
     let init = match init {
