@@ -1,6 +1,4 @@
-use std::rc::Rc;
-
-use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::{array::Array, function::Function}, ErrorStack};
+use vaca_core::{Symbol, SymbolTable, lookup, register, sym, Value, function, value::{array::Array, function::Function, valueref::ValueRef}, ErrorStack};
 
 pub fn load(table: &mut SymbolTable) {
     register!(table, "nth", function!(nth, "index", "array"));
@@ -12,7 +10,7 @@ pub fn load(table: &mut SymbolTable) {
     register!(table, "concat", function!(concat, "init", "end"));
 }
 
-fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn nth(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let index = lookup!(table, "index")?;
     
     let mut index = *match index.as_ref() {
@@ -23,7 +21,7 @@ fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
     let array = lookup!(table, "array")?.to_array();
 
     if array.len() == 0 {
-        Ok(Rc::new(Value::Nil))
+        Ok(ValueRef::own(Value::Nil))
     } else {
         let index = if index >= 0 {
             index as usize % array.len()
@@ -34,87 +32,87 @@ fn nth(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
             index as usize
         };
 
-        Ok(Rc::clone(&array.iter().nth(index).unwrap()))
+        Ok(array.iter().nth(index).unwrap().clone())
     }
 }
 
-fn prepend(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn prepend(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let item = lookup!(table, "item")?;
     let mut array = lookup!(table, "array")?.to_array();
 
     array.push_front(item);
 
-    Ok(Rc::new(Value::Array(array)))
+    Ok(ValueRef::own(Value::Array(array)))
 }
 
-fn append(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn append(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let item = lookup!(table, "item")?;
     let mut array = lookup!(table, "array")?.to_array();
 
     array.push_back(item);
 
-    Ok(Rc::new(Value::Array(array)))
+    Ok(ValueRef::own(Value::Array(array)))
 }
 
-fn concat(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn concat(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let mut init = lookup!(table, "init")?.to_array();
     let end = lookup!(table, "end")?.to_array();
 
     init.extend(end.into_iter());
 
-    Ok(Rc::new(Value::Array(init)))
+    Ok(ValueRef::own(Value::Array(init)))
 }
 
-fn map(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn map(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let f = lookup!(table, "f")?;
     
     let f = match f.as_ref() {
         Value::Function(f) => f,
-        _ => return Err(format!("Argument for `f` should be a function not `{f}`").into())
+        _ => return Err(format!("Argument for `f` should be a function not `{}`", f.as_ref()).into())
     };
 
     let mut array = lookup!(table, "array")?.to_array();
 
     for item in array.iter_mut() {
-        *item = f.exec(Array::from([item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
+        *item = f.exec(Array::from([item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{}`", item.as_ref())) })?;
     }
 
-    Ok(Rc::new(Value::Array(array)))
+    Ok(ValueRef::own(Value::Array(array)))
 }
 
-fn reduce(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn reduce(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let f = lookup!(table, "f")?;
     
     let f = match f.as_ref() {
         Value::Function(f) => f,
-        _ => return Err(format!("Argument for `f` should be a function not `{f}`").into())
+        _ => return Err(format!("Argument for `f` should be a function not `{}`", f.as_ref()).into())
     };
 
     let mut acc = lookup!(table, "init")?;
     let array = lookup!(table, "array")?.to_array();
 
     for item in array.iter() {
-        acc = f.exec(Array::from([acc, item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
+        acc = f.exec(Array::from([acc, item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{}`", item.as_ref())) })?;
     }
 
     Ok(acc)
 }
 
-fn scan(table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+fn scan(table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
     let f = lookup!(table, "f")?;
     
     let f = match f.as_ref() {
         Value::Function(f) => f,
-        _ => return Err(format!("Argument for `f` should be a function not `{f}`").into())
+        _ => return Err(format!("Argument for `f` should be a function not `{}`", f.as_ref()).into())
     };
 
     let mut acc = lookup!(table, "init")?;
     let mut array = lookup!(table, "array")?.to_array();
 
     for item in array.iter_mut() {
-        acc = f.exec(Array::from([acc, item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{item}`")) })?;
+        acc = f.exec(Array::from([acc, item.clone()]), table).map_err(|err| ErrorStack::Stream { src: None, from: Box::new(err), note: Some(format!("During mapping of item `{}`", item.as_ref())) })?;
         *item = acc.clone();
     }
 
-    Ok(Rc::new(Value::Array(array)))
+    Ok(ValueRef::own(Value::Array(array)))
 }

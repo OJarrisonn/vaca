@@ -66,7 +66,7 @@ impl Display for Value {
             Self::Integer(i) => format!("{i}"),
             Self::Float(f) => format!("{f}"),
             Self::Array(a) => format!("[ {}]", a.iter()
-                .map(|w| format!("{} ", w))
+                .map(|w| format!("{} ", w.as_ref()))
                 .reduce(|acc, f| format!("{acc}{f}"))
                 .unwrap_or(String::from(""))
             ),
@@ -108,7 +108,7 @@ impl PartialEq for Value {
                 if l0.len() != r0.len() {
                     false
                 } else {
-                    zip(l0, r0).all(|(l, r)| l == r)
+                    zip(l0, r0).all(|(l, r)| l.as_ref() == r.as_ref())
                 }
             },
             _ => false//core::mem::discriminant(self) == core::mem::discriminant(other),

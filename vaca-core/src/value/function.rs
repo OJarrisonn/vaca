@@ -1,20 +1,20 @@
-use std::{iter::zip, rc::Rc};
+use std::iter::zip;
 
 use crate::{Symbol, Value, SymbolTable, Form, ErrorStack};
 
-use super::array::Array;
+use super::{array::Array, valueref::ValueRef};
 
 #[derive(Debug, Clone)]
 pub struct Function {
     arity: usize,
     params: Vec<Symbol>,
-    partials: Vec<Rc<Value>>,
+    partials: Vec<ValueRef>,
     body: Option<Form>,
     native: Option<NativeFunction>
 }
 
 /// The function call takes care of passing the return value to the previous ownership scope
-pub type NativeFunction = fn(&mut SymbolTable) -> Result<Rc<Value>, ErrorStack>;
+pub type NativeFunction = fn(&mut SymbolTable) -> Result<ValueRef, ErrorStack>;
 
 impl Function {
     pub fn new(params: Vec<Symbol>, body: Form) -> Self {
@@ -41,14 +41,14 @@ impl Function {
         self.arity
     }
 
-    pub fn exec(&self, source_args: Array, table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    pub fn exec(&self, source_args: Array, table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
         if self.arity < source_args.len() {
             return Err(ErrorStack::Top { 
                 src: self.body.as_ref().map(|b| b.to_string()), 
                 msg: format!("Too many arguments passed to function call, expected {}, but got {}", self.arity, source_args.len()) 
             });
         } else if self.arity > source_args.len() {
-            return Ok(Rc::new(Value::Function(Function::partial(&self, source_args))));
+            return Ok(ValueRef::own(Value::Function(Function::partial(&self, source_args))));
         }
 
         let mut args = self.partials.clone();
@@ -56,7 +56,7 @@ impl Function {
         
         table.create_scope();
 
-        zip(&self.params, args).for_each(|(s, v)| table.register(s.clone(), v));
+        zip(&self.params, args).for_each(|(s, v)| table.register(s.clone(), v.take()));
 
         let res = if self.body.is_none() {
             self.native.unwrap()(table)

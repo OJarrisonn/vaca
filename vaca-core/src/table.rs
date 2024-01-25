@@ -1,14 +1,14 @@
-use std::{collections::LinkedList, rc::Rc};
+use std::collections::LinkedList;
 
 use rustc_hash::{FxHashMap, FxHashSet};
-use crate::{Value, Symbol, ErrorStack};
+use crate::{value::valueref::ValueRef, ErrorStack, Symbol, Value};
 
 /// The structure that register our definitions using the `#( ... )` syntax
 /// A symbol table is a stack of scopes, with each level containing it's associations
 /// This allows name shadowing by overriding a Value in a inner scope, but recovering it when exiting the scope
 #[derive(Debug)]
 pub struct SymbolTable {
-    tables: LinkedList<FxHashMap<Symbol, Rc<Value>>>
+    tables: LinkedList<FxHashMap<Symbol, ValueRef>>
 }
 
 impl SymbolTable {
@@ -31,13 +31,13 @@ impl SymbolTable {
     }
 
     /// Associates a symbol to a new value in the current top scope
-    pub fn register(&mut self, symbol: Symbol, value: Rc<Value>) {
-        self.tables.back_mut().unwrap().insert(symbol, value);
+    pub fn register(&mut self, symbol: Symbol, value: Value) {
+        self.tables.back_mut().unwrap().insert(symbol, ValueRef::own(value));
     }
 
     /// Tries to return a Rc to a value stored in the table if the value do exists
-    pub fn lookup(&mut self, symbol: &Symbol) -> Result<Rc<Value>, ErrorStack> {
-        match self.tables.iter().rev().find_map(|table| table.get(symbol).cloned()) {
+    pub fn lookup(&mut self, symbol: &Symbol) -> Result<ValueRef, ErrorStack> {
+        match self.tables.iter().rev().find_map(|table| table.get(symbol).map(|value| ValueRef::point(value))) {
             Some(value) => Ok(value),
             None => Err(ErrorStack::Top { src: None, msg: format!("Use of undefined symbol `{}`. Maybe you misspeled or the symbol's scope got dropped", symbol) }
             ),
@@ -65,7 +65,6 @@ impl SymbolTable {
 
 #[cfg(test)]
 mod tests {
-    use std::rc::Rc;
 
     use crate::{Symbol, Value};
 
@@ -77,11 +76,11 @@ mod tests {
 
         table.create_scope();
 
-        table.register(Symbol::from("a"), Rc::new(Value::Bool(false)));
+        table.register(Symbol::from("a"), Value::Bool(false));
 
         table.create_scope();
 
-        table.register(Symbol::from("b"), Rc::new(Value::Char('j')));
+        table.register(Symbol::from("b"), Value::Char('j'));
 
         table.drop_scope();
 

@@ -1,8 +1,9 @@
-use std::{rc::Rc, ops::ControlFlow};
+use std::ops::ControlFlow;
 
-use crate::Value;
 
-type Success = Rc<Value>;
+use super::valueref::ValueRef;
+
+type Success = ValueRef;
 type Failure = String;
 pub enum ExecResult {
     Success(Success),
