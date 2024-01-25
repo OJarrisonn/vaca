@@ -1,7 +1,7 @@
-use std::{collections::LinkedList, fmt::Display, rc::Rc};
+use std::{collections::LinkedList, fmt::Display};
 use speedy::{Readable, Writable};
 
-use crate::{Value, Symbol, value::{array::Array, function::Function, macros::Macro}, SymbolTable, ErrorStack};
+use crate::{Value, Symbol, value::{array::Array, function::Function, macros::Macro, valueref::ValueRef}, SymbolTable, ErrorStack};
 
 
 #[derive(Debug, Clone, Readable, Writable)]
@@ -28,15 +28,15 @@ pub enum Literal {
 }
 
 impl Form {
-    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    pub fn eval(&self, table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
         match self {
             Form::AssingmentList(pairs) => {
                 for (s, e) in pairs {
                     let v = e.eval(table)?;
-                    table.register(s.clone(), v);
+                    table.register(s.clone(), v.take());
                 }
 
-                Ok(Rc::new(Value::Nil))
+                Ok(ValueRef::own(Value::Nil))
             },
             Form::Assingment(_, _) => {
                 panic!("Shouldn't eval over a single assingment");
@@ -48,7 +48,7 @@ impl Form {
                 let mut res = b.iter()
                 .map(|e| e.eval(table))
                 .reduce(|acc, r| if acc.is_err() { acc } else { r })
-                .unwrap_or(Ok(Rc::new(Value::Nil)));
+                .unwrap_or(Ok(ValueRef::own(Value::Nil)));
             
                 if let Ok(d) = res {
                     res = Ok(d);
@@ -60,13 +60,13 @@ impl Form {
             },
 
             Form::Function(params, body) => Ok(
-                Rc::new(
+                ValueRef::own(
                     Value::Function(
                         Function::new(params.clone(), 
                                       (**body).clone())))
             ),
             Form::Macro(params, body) => Ok(
-                Rc::new(
+                ValueRef::own(
                     Value::Macro(
                         Macro::defined(params.clone(), 
                                       (**body).clone())))
@@ -121,7 +121,7 @@ impl Form {
 
                 match res {
                     Err(err) => Err(ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: Some("Error happened while evaluating an item of the current array".into()) }),
-                    Ok(d) => Ok(Rc::new(Value::Array(d))),
+                    Ok(d) => Ok(ValueRef::own(Value::Array(d))),
                 }
             },
             Form::Literal(l) => l.eval(table).map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None }),
@@ -168,14 +168,14 @@ impl Form {
 }
 
 impl Literal {
-    pub fn eval(&self, table: &mut SymbolTable) -> Result<Rc<Value>, ErrorStack> {
+    pub fn eval(&self, table: &mut SymbolTable) -> Result<ValueRef, ErrorStack> {
         let value = match self {
-            Literal::Nil => Rc::new(Value::Nil),
-            Literal::Integer(i) => Rc::new(Value::Integer(*i)),
-            Literal::Float(f) => Rc::new(Value::Float(*f)),
-            Literal::Char(c) => Rc::new(Value::Char(*c)),
-            Literal::String(s) => Rc::new(Value::String(s.clone())),
-            Literal::Bool(b) => Rc::new(Value::Bool(*b)),
+            Literal::Nil => ValueRef::own(Value::Nil),
+            Literal::Integer(i) => ValueRef::own(Value::Integer(*i)),
+            Literal::Float(f) => ValueRef::own(Value::Float(*f)),
+            Literal::Char(c) => ValueRef::own(Value::Char(*c)),
+            Literal::String(s) => ValueRef::own(Value::String(s.clone())),
+            Literal::Bool(b) => ValueRef::own(Value::Bool(*b)),
             Literal::Symbol(s) => table.lookup(s)?//.map_err(|err| ErrorStack::Stream { src: Some(self.to_string()), from: Box::new(err), note: None })?,
         };
 
