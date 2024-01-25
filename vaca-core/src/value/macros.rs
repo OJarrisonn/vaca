@@ -1,6 +1,8 @@
-use std::{collections::LinkedList, iter::zip, rc::Rc};
+use std::{collections::LinkedList, iter::zip};
 
 use crate::{ErrorStack, Form, Symbol, SymbolTable, Value};
+
+use super::valueref::ValueRef;
 
 #[derive(Debug, Clone)]
 pub struct Macro {
@@ -16,7 +18,7 @@ enum MacroBody {
     Native(NativeMacro)
 }
 
-pub type NativeMacro = fn(&mut SymbolTable, Vec<Form>) -> Result<Rc<Value>, ErrorStack>;
+pub type NativeMacro = fn(&mut SymbolTable, Vec<Form>) -> Result<ValueRef, ErrorStack>;
 
 impl Macro {
     pub fn defined(params: Vec<Symbol>, body: Form) -> Self {
@@ -41,14 +43,14 @@ impl Macro {
         self.arity
     }
 
-    pub fn exec(&self, table: &mut SymbolTable, source_forms: LinkedList<Form>) -> Result<Rc<Value>, ErrorStack> {
+    pub fn exec(&self, table: &mut SymbolTable, source_forms: LinkedList<Form>) -> Result<ValueRef, ErrorStack> {
         if self.arity != 0 && self.arity < source_forms.len() {
             return Err(ErrorStack::Top { 
                 src: None, 
                 msg: format!("Too many arguments passed to macro call, expected {}, but got {}", self.arity, source_forms.len()) 
             });
         } else if self.arity > source_forms.len() {
-            return Ok(Rc::new(Value::Macro(self.partial(source_forms))));
+            return Ok(ValueRef::own(Value::Macro(self.partial(source_forms))));
         }
 
         let mut forms = self.partials.clone();

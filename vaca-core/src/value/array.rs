@@ -1,4 +1,5 @@
-use std::{collections::LinkedList, rc::Rc};
-use crate::Value;
+use std::collections::LinkedList;
 
-pub type Array = LinkedList<Rc<Value>>;
+use super::valueref::ValueRef;
+
+pub type Array = LinkedList<ValueRef>;
