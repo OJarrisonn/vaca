@@ -1,11 +1,9 @@
-use vaca_core::Symbol;
+use vaca_core::Form;
 
+use crate::library::{Library, LibraryCollection};
+
+#[derive(Debug)]
 pub struct Program {
-    imports: Vec<Import>
-}
-
-pub struct Import {
-    namespace: String,
-    path: String,
-    symbols: Vec<Symbol>
+    libraries: LibraryCollection,
+    forms: Vec<Form>
 }
