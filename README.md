@@ -1,172 +1,132 @@
-# Vaca
+# The Vaca Programming Language
 
-Vaca is an interpreted functional programming language using a lisp-like syntax
+> Vaca is still alpha.
+> Don't use it for serious projects.
+> Lot of ground breaking changes may happen.
+> No backwards compatibility guaranteed.
 
-## Features
+Vaca is an interpreted functional programming language that uses a LISPy syntax and is built on top of [Rust](https://rust-lang.org).
 
-- No side effects
-- High order functions: functions are treated as values
-- TODO: Partial resolution: if you don't pass enough arguments to a function then the function returns another function as the result
-- Assingments: values can be assined to names inside a scope
+"Vaca" comes from the portuguese word for "cow". It was born as a sandboxing for a future bigger project, but now Vaca has its own ambitions. Currently targeting a tree-walker interpreter, Vaca aims to be dynamic and expansible by nature.
 
-## Syntax
+## Usage
 
-### Literals
+The vaca executable has four subcommands:
+
+- `help`: shows a help page
+- `repl`: the default mode, starts a repl environment
+- `run <file>`: runs a `*.vaca` or `*.casco` file as a program
+- `build <source> [output]`: reads an input `*.vaca` file, builds and saves it to a `*.casco` file (output name is optional)
+
+## Vaca 101
+
+I'm assuming that you have some knowledge about programming. Let's take a look at how to use vaca
+
+### Values
+
+Vaca is dynamicaly typed, and those are the available values:
+
+- Integers: `-100`, `78`, `0`
+- Floats: `3.1415`, `-.5` (same as `-0.5`), `7.0`
+- Strings: `"Alphabet"`, `"Hello World!"`
+- Chars: `'g'`, `'r'`, `'e'`, `'a'`, `'t'`
+- Booleans: `true`, `false`
+- Arrays: `[]`, `[1 2 3 4]`, `["yellow" true 87 9.98]`
+- Functions
+- Macros
+- Nil: `nil`
+- NotANumber (you can't instantiate NaN, but it may be returned by math functions)
+
+### Assignments
+
+To assign values to symbols (commonly known as "variables") we use `#( )` syntax. They are accessible and can be overwritten in inner scopes, but once the scope is gone, the previous value is restored. They can be also overwritten in the current scope.
+
+To create assignments, just list the symbols with their respective values.
 
 ```lisp
-nil ; Nil
-10 ; Integer
-7.78 ; Float
-true ; Bool
-"My name" ; String
-'k' ; char
-age ; Symbol
-$no ; Atom [TODO]
+#(name "Jorge Harrisonn"
+  age 19
+  human true)
 ```
 
-### Assingment
+Try ovewritting
 
 ```lisp
-#(name value name value ...)
+#(a 10 b 25)
+{
+    #(a 71) ; a = 71, b = 25
+}
+; a = 10, b = 25
 ```
 
-Each name is defined (or redefined) to the given value with the given type associated
+Symbols can be `kebab-case` with numbers and uppercases (but it must start in a letter) and my finish with `!`, `?` and/or `'` (in that order). They can also be any non reserved sequence of: `!`, `@`, `#`, `$`, `%`, `&`, `*`, `-`, `+`, `=`, ```, `~`, `^`, `:`, `>`, `<`, `,`, `|`, `\\`, `/`, `?`
+
+### Calls
+
+To call functions and macros use `( )` syntax, pass a callable value as the first element, and it's arguments as the remainders. If you pass more arguments than needed by the function and error is thrown, and if you pass less arguments, a new function is created curring the missing arguments.
+
+```lisp
+#(name "Harrisonn"
+  age 19)
+(println ["Hello World, I'm " name " and I'm " age " years old"])
+(println ["This year i'll turn " (+ age 1)])
+
+#(inc (+ 1))
+(println (inc 100))
+```
+
+Check [reference](https://github.com/OJarrisonn/vaca/blob/master/REFERENCE.md) to see all the STL functions
 
 ### Code Blocks
 
-```lisp
-{expr expr expr ...}
-```
-
-Each expression is evaluated and the last one is returned as the value of the block
-
-### Functions, Macros and Calls
+Code blocks `{ }` are used to execute multiple expressions in sequence, but only the value of the last expression is returned. Also, a code block is a scope, so assignments inside a code block are dropped and the end of the block.
 
 ```lisp
-<(arg arg arg ... -> expr expr expr ...)
+#(test 1234)
+#(res {
+    #(test "Apple"
+      value false)
+      test
+})
+; res = "Apple"
+; value no longer exists
+; test is 1234 again
 ```
 
-Creates a function that receives some arguments and return the evaluated expression
+### Arrays
+
+Arrays can be created by using `[ ]` syntax and then listing the values, don't need to be literal values, any Vaca expression is acceptable.
 
 ```lisp
-[(arg arg arg ... -> expr expr expr ...) ; [TODO]
+#(data [1 'b' "three" true nil])
 ```
 
-Creates a macro that receives some arguments and returns the evaluated expression, the advantage of macros is that its arguments evaluation is lazy
+### Functions
+
+To create functions, we use `<( -> )` syntax. List the function parameters before `->` and the forms to be evaluated after it, the value of the last form is the return value of the function. There's no early return.
+
+```
+#(cube <(x -> (^ x 3)))
+(println (cube 3)) ; 27
+
+#(hip <(b c -> (brt (+ (* b b) 
+                       (* c c)) 
+                    2)))
+```
+
+Pay attention that the arguments of functions are evaluated before right before the execution of the function
+
+### Macros
+
+The Vaca macros are symply functions whose arguments are lazy evaluated, it means, they are only evaluated when needed
 
 ```lisp
-(expr expr expr ...)
+#(two-times [(x -> {x x})) ; Macro
+(two-times (print "Hi")) ; HiHi
+#(two-times <(x -> {x x})) ; Function
+(two-times (print "Hi")) ; Hi
 ```
 
-This executes the function defined as the first argument passing all the other as it's arguments
+## License
 
-### Array
-
-```lisp
-[expr expr expr ...]
-```
-
-This creates an array
-
-Accessing a specific element can be done using the function `nth` with signature `(nth index array)`
-
-### Object
-
-```lisp
-<{ key value key value key value ... } ; [TODO]
-```
-
-This creates an object associating each key to the corresponding value
-
-Accessing the a value can be done using the function `get` with signature `(get key object)`
-
-### Don't care [TODO]
-
-A don't care `_` can be used to turn a call into a function by currying a value out of order
-
-For example:
-
-```lisp
-(^ 2) ; this creates a function <(y -> (^ 2 y))
-(^ _ 2) ; this creates a function <(x -> (^ x 2))
-(^ _ _) ; this is the same as <(x y -> (^ x y)) or simply (^)
-```
-
-### External Libs [TODO]
-
-Vaca (will) support loading external libraries
-
-```lisp
-<u stl/utils> ; this loads the lib utils renaming all the symbols it exports from "name" to "vutils/name"
-(u/logerr ["An error message"])
-```
-
-Some more importing syntax
-
-```lisp
-<lib/path> ; loads everything from the given lib without renaming it 
-<ns lib/path> ; loads everything from the given lib but preppending it's symbols with "ns/"
-<... -> s1 s2 s3 ...> ; loads just the specified symbols
-<: ... -> s1 s2 s3 ...> ; loads a rust dynamic library, you MUST provide the symbols to be imported
-<# ... -> s1 s2 s3 ...> ; loads a c dynamic library, you MUST provide the symbols to be imported
-```
-
-Vaca will search for the libraries in the following folders:
-
-- the folder where "vaca" was called
-- "the folder where 'vaca' was called"/libs
-- ${VACA_HOME}/libs (for .vaca or .casco files)
-- ${VACA_HOME}/rlibs (for rust dynamic libraries)
-- ${VACA_HOME}/clibs (for c dynamic libraries)
-
-When passing a lib path to be imported there's no need for a *.vaca, *.casco, *.so, *.dll or *.dylib extension, it will be auto detected based on the import type and the platform where the code in being ran.
-
-No spaces are allowed in the path
-
-## Example program
-
-```lisp
-#(name "Jorge" age 19) ; Defines two variables
-(print ["Hello my name is " name " and i'm " age "years old\nWhat's your name?"]) ; Calls a print
-#(name (readln)) ; Reads more input from the keyboard
-(print ["Nice to meet you " name "!"]) ; Prints it back
-```
-
-## TODO
-
-- [x] Rename .leite to .casco
-- [ ] STL
-    - [ ] math lib
-      - [x] NaN
-    - [ ] array lib
-    - [ ] string lib
-- [ ] Error Callstack
-- [ ] Garbage Collector improvements
-- [ ] Partial resolution
-    - [x] pass less arguments then needed
-    - [ ] use _ to pass away arguments out of order
-- [ ] Library loading
-    - Load some .vaca or .casco files
-    - Load Rust dynamic libraries (.so or .dll)
-    - Load C dynamic libraries (.so or .dll)
-    - Load C++ dynamic libraries (.so or .dll)
-- [ ] Casco CLI tool
-    - A project manager for Vaca
-
-## Project Structure
-
-vaca - main project
-vaca-core - the essential types of vaca
-vaca-runtime - the runtime that runs vaca compiled code
-vaca-build - the responsible of taking source code and generating an ast
-vaca-repl - all the repl environment
-
-## Future Projects
-
-### Casco
-
-Casco will be a Vaca project manager letting you manage the dependencies of your vaca program
-
-### Ubre
-
-The next Vaca garbage collector
+MIT
