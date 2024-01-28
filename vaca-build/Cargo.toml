@@ -11,3 +11,4 @@ pest_derive = "2.7.6"
 speedy = "0.8.7"
 rustc-hash = "1.1.0"
 vaca-core = { path = "../vaca-core" }
+vaca-stl = { path = "../vaca-stl" }

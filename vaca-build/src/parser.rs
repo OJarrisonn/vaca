@@ -1,6 +1,10 @@
+use std::fmt::Result;
+
 use pest::{Parser, iterators::Pair};
 use pest_derive::Parser;
 use vaca_core::{form::Literal, ErrorStack, Form, Symbol};
+
+use crate::library::Library;
 
 #[derive(Parser)]
 #[grammar = "./parser/grammar.pest"]
@@ -12,6 +16,17 @@ pub fn parse_program(form: String) -> Result<Form, ErrorStack>{
     match res {
         Ok(mut pairs) => pair_walk(pairs.next().unwrap()),
         Err(e) => Err(format!("{}", e).into()),
+    }
+}
+
+pub fn parse_library(input: String) -> Result<Library, ErrorStack> {
+    let res = VacaParser::parse(Rule::lib, &input);
+
+    match res {
+        Ok(pairs) => pairs.into_iter()
+            .map(|pair| pair_walk(pair))
+            .collect::Result<Vec<Form>, >(),
+        Err(e) => Err(ErrorStack::Stream { src: None, from: Box::new(e), note: Some("Error happened during parsing of a library file".into()) })
     }
 }
 
