@@ -51,7 +51,7 @@ impl Form {
                 .unwrap_or(Ok(ValueRef::own(Value::Nil)));
             
                 if let Ok(d) = res {
-                    res = Ok(d);
+                    res = Ok(d.to_owned());
                 }
                 
                 table.drop_scope();
