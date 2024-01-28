@@ -20,7 +20,7 @@ The vaca executable has four subcommands:
 
 ## Vaca 101
 
-I'm assuming that you have some knowledge about programming. Let's take a look at how to use vaca
+I'm assuming that you have some knowledge about programming. Let's take a look at how to use Vaca
 
 ### Values
 
@@ -59,7 +59,7 @@ Try ovewritting
 ; a = 10, b = 25
 ```
 
-Symbols can be `kebab-case` with numbers and uppercases (but it must start in a letter) and my finish with `!`, `?` and/or `'` (in that order). They can also be any non reserved sequence of: `!`, `@`, `#`, `$`, `%`, `&`, `*`, `-`, `+`, `=`, ```, `~`, `^`, `:`, `>`, `<`, `,`, `|`, `\\`, `/`, `?`
+Symbols can be `kebab-case` with numbers and uppercases (but it must start in a letter) and may finish with `!`, `?` and/or `'` (in that order). They can also be any non reserved sequence of: `!`, `@`, `#`, `$`, `%`, `&`, `*`, `-`, `+`, `=`, ```, `~`, `^`, `:`, `>`, `<`, `,`, `|`, `\\`, `/`, `?`
 
 ### Calls
 
