@@ -3,7 +3,7 @@
 - `+ a b`: sums `a` and `b`
 - `- a b`: subtracts `b` from `a`
 - `* a b`: multiplies `a` by `b`
-- `/ a b`: devides `a` by `b`
+- `/ a b`: divides `a` by `b`
 - `// a b`: integer division of `a` and `b`
 - `^ a b`: `a` to the power of `b`
 - `> a b`: `a` greater than `b`
