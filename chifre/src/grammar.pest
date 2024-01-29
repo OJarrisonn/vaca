@@ -8,14 +8,13 @@ lib = {
   SOI ~ 
   imports ~
   export_list ~
-  (assingment_list | final_assingment_list)* ~
+  assingment_list* ~
   EOI
 }
 
 form = {
   assingment_list
 | mut_assingment_list
-| final_assingment_list
 | export_list
 | function
 | macrodef
@@ -66,7 +65,6 @@ nil            =  { "nil" }
 
 assingment_list = { "#(" ~ associations ~ ")" }
 mut_assingment_list = { "#'(" ~ mut_associations ~ ")" }
-final_assingment_list = { "#!(" ~ associations ~ ")" }
 export_list     = { "@(" ~ local_symbol* ~ ")" }
 associations     = { association* }
 mut_associations     = { mut_association* }
