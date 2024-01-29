@@ -1,6 +1,8 @@
+use std::fmt::Display;
+
 use speedy::{Readable, Writable};
 
-use self::{assignment::{Assignment, AssignmentKind}, call::Call, function::Function, macros::Macro};
+use self::{assignment::Assignment, call::Call, function::Function, macros::Macro};
 
 use super::{atom::Atom, symbol::Symbol};
 
@@ -30,10 +32,26 @@ pub enum Expr {
     Bool(bool),
     Symbol(Symbol),
     Atom(Atom),
-    AssignmentList(Vec<Assignment>, AssignmentKind),
+    AssignmentList(Vec<Assignment>),
     Scope(Vec<Form>),
     Function(Function),
     Macro(Macro),
     Call(Call),
     Array(Vec<Form>),
+}
+
+impl Form {
+    pub fn new(span: Span, expr: Expr) -> Self {
+        Self {span, expr}
+    }
+
+    pub fn span(&self) -> &Span {
+        &self.span
+    }
+}
+
+impl Display for Span {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}:{}) => {}", self.pos.0, self.pos.1, &self.src)
+    }
 }
