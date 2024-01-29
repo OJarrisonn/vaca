@@ -43,11 +43,11 @@ impl SymbolTable {
         } else {
             match self.scope.get(&symbol) {
                 Some(value) => Ok(ValueRef::point(value)),
-                None => match self.parent {
+                None => match &self.parent {
                     Some(parent) => parent.read()
                         .map_err(|err| RunErrorStack::Stream { 
                             src: Some(symbol.to_string()), 
-                            from: Box::new(err), 
+                            from: Box::new(RunErrorStack::Top { src: None, msg: err.to_string() }), 
                             note: Some(format!("failed to access parent scope while tring to get the value of `{}`", symbol)) 
                         })?.lookup(symbol),
                     None => Err(RunErrorStack::Top { src: Some(symbol.to_string()), msg: format!("use of undefined symbol `{}`", symbol) }),
