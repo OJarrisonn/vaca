@@ -11,18 +11,18 @@ pub mod call;
 
 #[derive(Debug, Clone, Readable, Writable)]
 pub struct Form {
-    expr: FormExpr,
-    span: FormSpan
+    expr: Expr,
+    span: Span
 }
 
 #[derive(Debug, Clone, Readable, Writable)]
-pub struct FormSpan {
+pub struct Span {
     src: String,
     pos: (usize, usize)
 }
 
 #[derive(Debug, Clone, Readable, Writable)]
-pub enum FormExpr {
+pub enum Expr {
     Nil,
     Integer(i64),
     Float(f64),
