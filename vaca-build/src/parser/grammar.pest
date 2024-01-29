@@ -39,11 +39,11 @@ literal = {
 keyword   = { bool | nil }
 operators = { ":" | "<{" | "}>" | "<(" | "[(" | "#(" | "#!(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
 
-symbol = @{operative_symbol | external_symbol | local_symbol}
+symbol = @{external_symbol | local_symbol}
 
 operative_symbol = @{ !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "-" | "+" | "=" | "`" | "~" | "^" | ":" | ">" | "<" | "," | "'" | "|" | "\\" | "/" | "?")+ }
-external_symbol = @{ kebab_symbol ~ "/" ~ (operative_symbol | local_symbol)}
-local_symbol = @{ kebab_symbol ~ "!"? ~ "?"? ~ "'"?}
+external_symbol = @{ kebab_symbol ~ "/" ~ local_symbol }
+local_symbol = @{ kebab_symbol ~ "!"? ~ "?"? ~ "'"? | operative_symbol}
 kebab_symbol = @{!keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-" )* }
 
 dontcare = { "_" }
@@ -68,7 +68,7 @@ assingment_list = { "#(" ~ associations ~ ")" }
 final_assingment_list = { "#!(" ~ associations ~ ")" }
 export_list     = { "@(" ~ associations ~ ")" }
 associations     = { association* }
-association      = { symbol ~ form ~ description? }
+association      = { local_symbol ~ form ~ description? }
 description = { "\"" ~ description_content ~ "\"" }
 description_content = {(!"\"" ~ ANY)*}
 
@@ -82,12 +82,12 @@ callable   = { form }
 code_block = { "{" ~ forms ~ "}" }
 
 captures  = { symbol* }
-parameters = { symbol* }
+parameters = { local_symbol* }
 
 vaca_import   = { "<{" ~ alias ~ path ~ ("->" ~ symbols)?~ "}>" }
 
-symbols = { symbol* }
-alias = { symbol }
+symbols = { local_symbol* }
+alias = { local_symbol }
 path = { symbol }
 
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
