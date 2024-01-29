@@ -1,5 +1,3 @@
-use speedy::{Readable, Writable};
-
 use crate::build::symbol::Symbol;
 
 use super::Form;
