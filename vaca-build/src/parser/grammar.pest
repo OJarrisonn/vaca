@@ -41,9 +41,9 @@ operators = { ":" | "<{" | "}>" | "<(" | "[(" | "#(" | "#!(" | "@(" | "{" | "[" 
 
 symbol = @{external_symbol | local_symbol}
 
-operative_symbol = @{ !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "-" | "+" | "=" | "`" | "~" | "^" | ":" | ">" | "<" | "," | "'" | "|" | "\\" | "/" | "?")+ }
+operative_symbol = @{ !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "-" | "+" | "=" | "`" | "~" | "^" | ":" | ">" | "<" | "," | "|" | "\\" | "/" | "?")+ }
 external_symbol = @{ kebab_symbol ~ "/" ~ local_symbol }
-local_symbol = @{ kebab_symbol ~ "!"? ~ "?"? ~ "'"? | operative_symbol}
+local_symbol = @{ (kebab_symbol ~ "!"? ~ "?"? | operative_symbol) ~ "'"? }
 kebab_symbol = @{!keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-" )* }
 
 dontcare = { "_" }
