@@ -1,18 +1,27 @@
-program = { vacaimport* ~ form* }
+program = { SOI ~ imports ~ forms ~ EOI }
+
+imports = { vaca_import* }
+
+forms = { form* }
 
 lib = {
+  SOI ~ 
+  imports ~
   export_list ~
-  assingment_list*
+  (assingment_list | final_assingment_list)* ~
+  EOI
 }
 
 form = {
   assingment_list
+| final_assingment_list
 | export_list
 | function
 | macrodef
 | array_list
 | code_block
 | call
+| infix_call
 | literal
 | dontcare
 }
@@ -20,7 +29,6 @@ form = {
 literal = {
   float
 | integer
-| char
 | string
 | bool
 | nil
@@ -29,23 +37,23 @@ literal = {
 }
 
 keyword   = { bool | nil }
-operators = { ":" | "<)" | "(>" | "<(" | "[(" | "#(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
+operators = { ":" | "<{" | "}>" | "<(" | "[(" | "#(" | "#!(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
 
-symbol = @{
-  !keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-" | "/")* ~ "!"? ~ "?"? ~ "'"? |
- !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "-" | "+" | "=" | "`" | "~" | "^" | ":" | ">" | "<" | "," | "|" | "\\" | "/" | "?")+
-}
+symbol = @{operative_symbol | external_symbol | local_symbol}
+
+operative_symbol = @{ !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "-" | "+" | "=" | "`" | "~" | "^" | ":" | ">" | "<" | "," | "'" | "|" | "\\" | "/" | "?")+ }
+external_symbol = @{ kebab_symbol ~ "/" ~ (operative_symbol | local_symbol)}
+local_symbol = @{ kebab_symbol ~ "!"? ~ "?"? ~ "'"?}
+kebab_symbol = @{!keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-" )* }
 
 dontcare = { "_" }
 atom           = @{ ":" ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
-float          = @{ "-"? ~ ('0'..'9')* ~ "." ~ ('0'..'9')+ | ('0'..'9')+ ~ "." ~ ('0'..'9')* }
+float           = @{ "-"? ~ ('0'..'9')* ~ "." ~ ('0'..'9')+ | ('0'..'9')+ ~ "." ~ ('0'..'9')* }
 integer        = @{ "-"? ~ ('0'..'9')+ }
 
 string         = ${ "\"" ~ string_content ~ "\"" }
 //string_content = @{ (!"\"" ~ ANY)* }
 string_content = @{ char_content* }
-
-char           = ${ "'" ~ char_content ~ "'" }
 //char_content   = @{ (!"'" ~ ANY)? }
 char_content = {
     !("\"" | "\\") ~ ANY
@@ -56,17 +64,31 @@ char_content = {
 bool           =  { "true" | "false" }
 nil            =  { "nil" }
 
-assingment_list = { "#(" ~ assingment* ~ ")" }
-export_list     = { "@(" ~ assingment* ~ ")" }
-assingment      = { symbol ~ form }
+assingment_list = { "#(" ~ associations ~ ")" }
+final_assingment_list = { "#!(" ~ associations ~ ")" }
+export_list     = { "@(" ~ associations ~ ")" }
+associations     = { association* }
+association      = { symbol ~ form ~ description? }
+description = { "\"" ~ description_content ~ "\"" }
+description_content = {(!"\"" ~ ANY)*}
 
-array_list = { "[" ~ form* ~ "]" }
+array_list = { "[" ~ forms ~ "]" }
 
-function   = { "<(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form ~ ")" }
-macrodef   = { "[(" ~ (symbol ~ (!"->" ~ symbol)* ~ "->")? ~ form ~ ")" }
-vacaimport   = { "<)" ~ symbol ~ symbol ~ ("->" ~ symbol+)?~ "(>" }
-call       = { "(" ~ form+ ~ ")" }
-code_block = { "{" ~ form* ~ "}" }
+function   = { "<(" ~ (captures ~ ":")? ~ (parameters ~ "->")? ~ form ~ ")" }
+macrodef   = { "[(" ~ (parameters ~ "->")? ~ form ~ ")" }
+call       = { "(" ~ callable ~ forms ~ ")" }
+infix_call = { ":(" ~ form ~ form ~ form ~ ")" }
+callable   = { form }
+code_block = { "{" ~ forms ~ "}" }
+
+captures  = { symbol* }
+parameters = { symbol* }
+
+vaca_import   = { "<{" ~ alias ~ path ~ ("->" ~ symbols)?~ "}>" }
+
+symbols = { symbol* }
+alias = { symbol }
+path = { symbol }
 
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
 COMMENT    = _{ ";;" ~ (!";;" ~ ANY)* ~ ";;" | ";" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
