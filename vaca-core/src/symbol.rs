@@ -17,7 +17,7 @@ impl Symbol {
     /// If already is an `External`, just replaces the `ns` field
     pub fn export(self, namespace: String) -> Self {
         match self {
-            Symbol::External { ns, symbol } => Symbol::External { ns: namespace, symbol },
+            Symbol::External { ns: _, symbol } => Symbol::External { ns: namespace, symbol },
             Symbol::Local(symbol) => Symbol::External { ns: namespace, symbol },
         }
     }
