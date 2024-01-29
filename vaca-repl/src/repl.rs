@@ -72,7 +72,7 @@ impl Repl {
             
             let _ = editor.add_history_entry(&input);
 
-            let form = match build::parse_form(input) {
+            let form = match build::lex_form(input) {
                 Ok(form) => form,
                 Err(e) => {
                     eprintln!("!>> \n{e}");

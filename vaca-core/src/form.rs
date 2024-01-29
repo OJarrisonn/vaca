@@ -7,9 +7,9 @@ use crate::{Value, Symbol, value::{array::Array, function::Function, macros::Mac
 #[derive(Debug, Clone, Readable, Writable)]
 pub enum Form {
     AssingmentList(Vec<(Symbol, Form)>),
-    Assingment(Symbol, Box<Form>),
+    FinalAssingmentList(Vec<(Symbol, Form)>),
     CodeBlock(Vec<Form>),
-    Function(Vec<Symbol>, Box<Form>),
+    Function(Option<Vec<Symbol>>, Vec<Symbol>, Box<Form>),
     Macro(Vec<Symbol>, Box<Form>),
     Call(Box<Form>, Vec<Form>),
     Array(Vec<Form>),
@@ -38,10 +38,14 @@ impl Form {
 
                 Ok(ValueRef::own(Value::Nil))
             },
-            Form::Assingment(_, _) => {
-                panic!("Shouldn't eval over a single assingment");
-            }
+            Form::FinalAssingmentList(pairs) => {
+                for (s, e) in pairs {
+                    let v = e.eval(table)?;
+                    table.register(s.clone(), v.take());
+                }
 
+                Ok(ValueRef::own(Value::Nil))
+            },
             Form::CodeBlock(b) => { 
                 table.create_scope();
 
@@ -59,7 +63,7 @@ impl Form {
                 res
             },
 
-            Form::Function(params, body) => Ok(
+            Form::Function(captures, params, body) => Ok(
                 ValueRef::own(
                     Value::Function(
                         Function::new(params.clone(), 
@@ -134,18 +138,21 @@ impl Form {
                 .map(|(s, f)| 
                     (s, f.replace_symbol(symbol, form)))
                 .collect()),
-            Form::Assingment(_, _) => unreachable!(),
+            Form::FinalAssingmentList(list) => Self::FinalAssingmentList(list.into_iter()
+                .map(|(s, f)| 
+                    (s, f.replace_symbol(symbol, form)))
+                .collect()),
             Form::CodeBlock(block) => Form::CodeBlock(block.into_iter()
                 .map(move  |f| 
                     f.replace_symbol(symbol, form))
                 .collect()),
-            Form::Function(params, body) => {
+            Form::Function(captures, params, body) => {
                 let body = if !params.contains(symbol) {
                     body.replace_symbol(symbol, form)
                 } else { 
                     *body
                 };
-                Form::Function(params, Box::new(body))
+                Form::Function(captures, params, Box::new(body))
             },
             Form::Macro(params, body) => {
                 let body = if !params.contains(symbol) {
@@ -193,7 +200,13 @@ impl Display for Form {
                 }
                 write!(f, ")")
             },
-            Form::Assingment(_, _) => unreachable!(),
+            Form::FinalAssingmentList(list) => {
+                write!(f, "#!( ")?;
+                for (s, e) in list.iter() {
+                    write!(f, "{} {} ", s, e)?
+                }
+                write!(f, ")")
+            },
             Form::CodeBlock(block) => {
                 writeln!(f, "{{")?;
                 for e in block.iter() {
@@ -201,9 +214,17 @@ impl Display for Form {
                 }
                 writeln!(f, "}}")
             },
-            Form::Function(args, body) => {
+            Form::Function(captures, args, body) => {
                 write!(f, "<( ")?;
                 
+                if let Some(captures) = captures {
+                    for c in captures.iter() {
+                        write!(f, "{} ", c)?
+                    }
+
+                    write!(f, ": ")?;
+                }
+
                 for s in args.iter() {
                     write!(f, "{} ", s)?
                 }

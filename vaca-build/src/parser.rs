@@ -1,29 +1,37 @@
-use pest::{Parser, iterators::Pair};
+use pest::Parser;
 use pest_derive::Parser;
-use vaca_core::{form::Literal, ErrorStack, Form, Symbol};
+use vaca_core::{ErrorStack, Form};
+
+use self::{form::parse_form, program::Program};
+
+pub mod program;
+pub mod library;
+pub mod form;
 
 #[derive(Parser)]
 #[grammar = "./parser/grammar.pest"]
 pub struct VacaParser;
 
-pub fn parse_program(form: String) -> Result<Form, ErrorStack>{
-    let res = VacaParser::parse(Rule::program, &form);
+pub fn lex_program(input: String) -> Result<Program, ErrorStack>{
+    let res = VacaParser::parse(Rule::program, &input);
 
     match res {
-        Ok(mut pairs) => pair_walk(pairs.next().unwrap()),
+        Ok(mut pairs) => Program::build(pairs.next().unwrap().into_inner()),
+
         Err(e) => Err(format!("{}", e).into()),
     }
 }
 
-pub fn parse_form(form: String) -> Result<Form, ErrorStack>{
+pub fn lex_form(form: String) -> Result<Form, ErrorStack>{
     let res = VacaParser::parse(Rule::form, &form);
 
     match res {
-        Ok(mut pairs) => pair_walk(pairs.next().unwrap()),
+        Ok(mut pairs) => Ok(parse_form(pairs.next().unwrap())),
         Err(e) => Err(format!("{}", e).into()),
     }
 }
 
+/*
 fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
     let src = Some(format!("[L {} C {}]: {}", pair.line_col().0, pair.line_col().1, pair.as_span().as_str()));
     match pair.as_rule() {
@@ -44,7 +52,7 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
         Rule::integer => Ok(Form::Literal(Literal::Integer(pair.as_str().parse().unwrap()))),
         
         Rule::string_content => Ok(Form::Literal(Literal::String(pair.as_str().to_string().replace("\\n", "\n").replace("\\r", "\r")))),
-
+        
         Rule::char_content => Ok(Form::Literal(Literal::Char(pair.as_str().chars().next().unwrap_or('\0')))),
         Rule::bool => Ok(Form::Literal(Literal::Bool(pair.as_str() == "true"))),
         Rule::nil => Ok(Form::Literal(Literal::Nil)),
@@ -66,8 +74,8 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
                     }
                 });
 
-            match res {
-                Ok(list) => Ok(Form::AssingmentList(list)),
+                match res {
+                    Ok(list) => Ok(Form::AssingmentList(list)),
                 Err(e) => Err(e),
             }
         },
@@ -94,7 +102,7 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
                         Err(e) => Err(e),
                     }
                 });
-            
+                
             match res {
                 Ok(list) => Ok(Form::Array(list)),
                 Err(e) => Err(e),
@@ -103,7 +111,7 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
         Rule::function => {
             let mut params = vec![];
             let mut body = vec![];
-
+            
             for p in pair.into_inner() {
                 match p.as_rule() {
                     Rule::symbol => params.push(p.as_str().into()),
@@ -113,7 +121,7 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
             }
 
             let body = Form::CodeBlock(body);
-
+            
             Ok(Form::Function(params, Box::new(body)))
         },
         Rule::macrodef => {
@@ -127,9 +135,9 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
                     _ => panic!("No other rule should be inside a function rule")
                 }
             }
-
+            
             let body = Form::CodeBlock(body);
-
+            
             Ok(Form::Macro(params, Box::new(body)))
         },
         Rule::call => {
@@ -154,13 +162,26 @@ fn pair_walk(pair: Pair<'_, Rule>) -> Result<Form, ErrorStack>{
         },
         Rule::code_block | Rule::program => {
             let res: Result<Vec<Form>, ErrorStack> = pair.into_inner()
-                .map(|pair| pair_walk(pair))
-                .collect();
-            
-            res.map(|ok| Form::CodeBlock(ok)).map_err(|err| ErrorStack::Stream { src: src, from: Box::new(err), note: Some("During parsing of a `Form` of a `Block`".into()) })
-        },
+            .map(|pair| pair_walk(pair))
+            .collect();
+        
+        res.map(|ok| Form::CodeBlock(ok)).map_err(|err| ErrorStack::Stream { src: src, from: Box::new(err), note: Some("During parsing of a `Form` of a `Block`".into()) })
+    },
         Rule::lib => Err(ErrorStack::Top { src, msg: "Libraries aren't implemented yet".into() }),
         Rule::dontcare => Err(ErrorStack::Top { src, msg: "Don't Cares aren't implemented yet".into() }),
         Rule::vacaimport => todo!(),
+    }
+}
+*/
+
+#[cfg(test)]
+mod tests {
+    use crate::lex_program;
+
+    #[test]
+    fn test_program_build() {
+        let result = lex_program(r#"
+        <(f : a -> (f a))"#.into());
+        let _ = dbg!(result);
     }
 }

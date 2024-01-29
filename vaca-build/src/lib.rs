@@ -1,10 +1,8 @@
 
-mod parser;
+pub mod parser;
 mod builder;
-// mod program;
-// mod library;
 
-pub use crate::{parser::{parse_program, parse_form}, builder::build};
+pub use crate::{parser::{lex_program, lex_form}, builder::build};
 
 #[cfg(test)]
 mod tests {

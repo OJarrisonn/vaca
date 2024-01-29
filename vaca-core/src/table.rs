@@ -1,6 +1,7 @@
 use std::collections::LinkedList;
 
 use rustc_hash::{FxHashMap, FxHashSet};
+use speedy::{Readable, Writable};
 use crate::{value::valueref::ValueRef, ErrorStack, Symbol, Value};
 
 /// The structure that register our definitions using the `#( ... )` syntax
