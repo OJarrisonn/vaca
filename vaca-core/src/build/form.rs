@@ -55,3 +55,18 @@ impl Display for Span {
         write!(f, "({}:{}) => {}", self.pos.0, self.pos.1, &self.src)
     }
 }
+
+impl From<pest::Span<'_>> for Span {
+    fn from(value: pest::Span<'_>) -> Self {
+        Span {
+            pos: value.start_pos().line_col(),
+            src: value.as_str().into()
+        }
+    }
+}
+
+impl Span {
+    pub fn pos(&self) -> &(usize, usize) {
+        &self.pos
+    }
+}
