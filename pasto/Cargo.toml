@@ -11,3 +11,4 @@ pest = "2.7.6"
 pest_derive = "2.7.6"
 vaca-core = {path = "../vaca-core"}
 chifre ={ path = "../chifre"}
+rustc-hash = "1.1.0"
