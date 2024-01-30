@@ -9,3 +9,12 @@ pub struct Macro {
     parameters: Vec<Symbol>, 
     body: Box<Form>
 }
+
+impl Macro {
+    pub fn new(parameters: Option<Vec<Symbol>>, body: Form) -> Self {
+        Self {
+            parameters: parameters.unwrap_or_default(), 
+            body: Box::new(body)
+        }
+    }
+}
