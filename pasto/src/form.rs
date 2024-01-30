@@ -21,7 +21,7 @@ pub fn parse_form(form: Pair<Rule>) -> Form {
         Rule::infix_call => todo!(),//callables::parse_infix(form),
         Rule::literal => literals::parse_literal(form),
         Rule::dontcare => todo!(),
-        Rule::form => return parse_form(form),
+        Rule::form => return parse_form(form.into_inner().next().unwrap()),
         _ => unreachable!()
     };
 
