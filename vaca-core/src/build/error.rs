@@ -7,9 +7,9 @@ pub struct LexError(pub String);
 
 #[derive(Debug)]
 pub enum BuildErrorStack {
-    Top{src: Span, msg: String},
-    Stream{from: Box<dyn Error>, src: Span, note: Option<String>},
-    MultiStream{from: Vec<Box<dyn Error>>, src: Span, note: Option<String>}
+    Top{src: String, msg: String},
+    Stream{from: Box<dyn Error>, src: String, note: Option<String>},
+    MultiStream{from: Vec<Box<dyn Error>>, src: String, note: Option<String>}
 }
 
 impl Error for LexError {}
@@ -46,7 +46,7 @@ impl Display for BuildErrorStack {
                     Some(note) => writeln!(f, "{note}")?,
                     None => (),
                 }
-                write!(f, "End of Error Stream caused at: ({}:{})", src.pos().0, src.pos().1)
+                write!(f, "End of Error Stream caused")
             }
         }
     }
