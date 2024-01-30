@@ -48,6 +48,9 @@ impl Form {
     pub fn span(&self) -> &Span {
         &self.span
     }
+    pub fn expr(&self) -> &Expr {
+        &self.expr
+    }
 }
 
 impl Display for Span {
