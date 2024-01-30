@@ -1,12 +1,10 @@
 use chifre::Rule;
 use pest::iterators::Pair;
-use vaca_core::build::form::{Expr, Span};
+use vaca_core::build::form::{call::Call, function::Function, macros::Macro, Expr};
 
-use super::symbols::parse_symbols;
+use super::{literals::parse_symbols, parse_form, parse_forms};
 
 pub fn parse_function(function: Pair<Rule>) -> Expr {
-    let span = Span::from(function.as_span());
-
     let parts = function.into_inner();
 
     let mut captures = None;
@@ -16,12 +14,38 @@ pub fn parse_function(function: Pair<Rule>) -> Expr {
         match part.as_rule() {
             Rule::captures => captures = Some(parse_symbols(part)),
             Rule::parameters => parameters = Some(parse_symbols(part)),
-            Rule::form => ,
+            Rule::form => return Expr::Function(Function::new(captures, parameters, parse_form(part.into_inner().next().unwrap()))),
             _ => unreachable!()
         }
     }
 
-    Expr::Nil
+    unreachable!()
+}
+
+/// Receives a [`Rule::macrodef`] and generates a Macro Expression
+pub fn parse_macro(macrodef: Pair<Rule>) -> Expr {
+    let parts = macrodef.into_inner();
+
+    let mut parameters = None;
+
+    for part in parts {
+        match part.as_rule() {
+            Rule::parameters => parameters = Some(parse_symbols(part)),
+            Rule::form => return Expr::Macro(Macro::new(parameters, parse_form(part.into_inner().next().unwrap()))),
+            _ => unreachable!()
+        }
+    }
+
+    unreachable!()
+}
+
+pub fn parse_call(function: Pair<Rule>) -> Expr {
+    let mut parts = function.into_inner();
+
+    let callable = parse_form(parts.next().unwrap().into_inner().next().unwrap());
+    let forms = parse_forms(parts.next().unwrap());
+    
+    Expr::Call(Call::new(callable, forms))
 }
 
 #[cfg(test)]
@@ -37,7 +61,6 @@ mod tests {
         assert!(form.is_ok());
         let function = parse_function(form.unwrap());
         dbg!(&function);
-        assert!(function.is_ok());
     }
 
     #[test]
@@ -47,7 +70,6 @@ mod tests {
         assert!(form.is_ok());
         let function = parse_function(form.unwrap());
         dbg!(&function);
-        assert!(function.is_ok());
     }
 
     #[test]
@@ -57,7 +79,6 @@ mod tests {
         assert!(form.is_ok());
         let function = parse_function(form.unwrap());
         dbg!(&function);
-        assert!(function.is_ok());
     }
 
     #[test]
@@ -67,6 +88,5 @@ mod tests {
         assert!(form.is_ok());
         let function = parse_function(form.unwrap());
         dbg!(&function);
-        assert!(function.is_ok());
     }
 }
