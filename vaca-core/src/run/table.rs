@@ -37,12 +37,12 @@ impl SymbolTable {
     pub fn lookup(&self, symbol: Symbol) -> RunResult<ValueRef> {
         if symbol.is_mutable() {
             match self.mutables.get(&symbol) {
-                Some(value) => Ok(ValueRef::point(value)),
+                Some(value) => Ok(ValueRef::clone(value)),
                 None => Err(RunErrorStack::Top { src: Some(symbol.to_string()), msg: format!("use of undefined mutable symbol `{}`. Mutable symbols are only accessible in the scope they were created", symbol) }),
             }
         } else {
             match self.scope.get(&symbol) {
-                Some(value) => Ok(ValueRef::point(value)),
+                Some(value) => Ok(ValueRef::clone(value)),
                 None => match &self.parent {
                     Some(parent) => parent.read()
                         .map_err(|err| RunErrorStack::Stream { 
@@ -58,13 +58,13 @@ impl SymbolTable {
 
     pub fn assign(&mut self, symbol: Symbol, value: Value) -> RunResult<()> {
         if symbol.is_mutable() {
-            self.mutables.insert(symbol, ValueRef::own(value));
+            self.mutables.insert(symbol, ValueRef::new(value));
             Ok(())
         } else {
             match self.scope.get(&symbol) {
                 Some(_) => Err(RunErrorStack::Top { src: Some(symbol.to_string()), msg: format!("atempt to mutate immutable symbol `{}`. If you need mutation, try creating `{}'`", symbol, symbol) }),
                 _ => {
-                    self.scope.insert(symbol, ValueRef::own(value));
+                    self.scope.insert(symbol, ValueRef::new(value));
                     Ok(())
                 }
             }
