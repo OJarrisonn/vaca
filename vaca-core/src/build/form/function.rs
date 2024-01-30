@@ -20,4 +20,16 @@ impl Function {
             body: Box::new(body)
         }
     }
+
+    pub fn captures(&self) -> &Option<Vec<Symbol>> {
+        &self.captures
+    }
+
+    pub fn parameters(&self) -> &Vec<Symbol> {
+        &self.parameters
+    }
+
+    pub fn body(&self) -> &Box<Form> {
+        &self.body
+    }
 }
