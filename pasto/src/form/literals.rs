@@ -8,6 +8,7 @@ pub fn parse_symbols(symbols: Pair<Rule>) -> Vec<Symbol> {
 }
 
 pub fn parse_literal(literal: Pair<Rule>) -> Expr {
+    let literal = literal.into_inner().next().unwrap();
     let src = literal.as_span().as_str();
 
     match literal.as_rule() {
