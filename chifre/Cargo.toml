@@ -1,6 +1,6 @@
 [package]
 name = "chifre"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Lexer for Vaca"
 
@@ -9,3 +9,7 @@ description = "Lexer for Vaca"
 [dependencies]
 pest = "2.7.6"
 pest_derive = "2.7.6"
+vaca-core = {path = "../vaca-core"}
+
+[dev-dependencies]
+insta = { version = "1.34.0", features = ["yaml"] }
