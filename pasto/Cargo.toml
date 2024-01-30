@@ -2,8 +2,9 @@
 name = "pasto"
 version = "0.1.0"
 edition = "2021"
-description = "Parser for Vaca, generates an AST-like structure"
+description = "Parser for Vaca, generates an AST-like structure from Chifre lexer"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chifre ={ path = "../chifre"}
