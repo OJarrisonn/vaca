@@ -1,5 +1,7 @@
 use std::{fmt::Display, iter::zip};
 
+use crate::build::form::Form;
+
 use self::{function::Function, macros::Macro, array::Array};
 
 pub mod function;
@@ -17,7 +19,9 @@ pub enum Value {
     String(String),
     Array(Array),
     Function(Function),
-    Macro(Macro)
+    Macro(Macro),
+    /// Action are values whose evaluation has side-effects
+    Action(Form)
 }
 
 impl Into<Array> for Value {
@@ -50,6 +54,7 @@ impl Value {
             Value::Array(a) => a.len() != 0,
             Value::Function(_) => false,
             Value::Macro(_) => false,
+            Value::Action(_) => false, // TODO: Force the eval of Actions
         }
     }
 }
@@ -70,7 +75,8 @@ impl Display for Value {
             ),
             Self::Function(f) => format!("'func\\{}", f.arity()),
             Self::Macro(m) => format!("'macro\\{}", m.arity()),
-            Self::String(s) => s.clone()
+            Self::String(s) => s.clone(),
+            Self::Action(a) => format!("'action:{}", a.span())
         })
     }
 }
