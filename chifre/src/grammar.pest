@@ -4,74 +4,71 @@ imports = { vaca_import* }
 
 forms = { form* }
 
-lib = {
-  SOI ~ 
-  imports ~
-  export_list ~
-  assingment_list* ~
-  EOI
+library = {
+    SOI ~ imports ~ export_list ~ assingment_list* ~ EOI
 }
 
+repl_form = { SOI ~ form ~ EOI }
+
 form = {
-  assingment_list
-| mut_assingment_list
-| export_list
-| function
-| macrodef
-| array_list
-| scope
-| call
-| infix_call
-| literal
-| dontcare
+    assingment_list
+  | mut_assingment_list
+  | function
+  | macrodef
+  | array_list
+  | scope
+  | call
+  | infix_call
+  | literal
+  | dontcare
 }
 
 literal = {
-  float
-| integer
-| string
-| bool
-| nil
-| atom
-| symbol
+    float
+  | integer
+  | string
+  | bool
+  | nil
+  | atom
+  | symbol
 }
 
 keyword   = { bool | nil }
 operators = { ":" | "<{" | "}>" | "<(" | "[(" | "#(" | "#!(" | "@(" | "{" | "[" | "]" | "}" | ")" | "_" | "->" }
 
-symbol = @{external_symbol | local_symbol | mut_symbol}
+symbol = @{ mut_symbol | external_symbol | local_symbol }
 
 operative_symbol = @{ !operators ~ ("!" | "@" | "#" | "$" | "%" | "&" | "*" | "-" | "+" | "=" | "`" | "~" | "^" | ":" | ">" | "<" | "," | "|" | "\\" | "/" | "?")+ }
-external_symbol = @{ kebab_symbol ~ "/" ~ local_symbol }
-local_symbol = @{ (kebab_symbol ~ "!"? ~ "?"? | operative_symbol) }
-mut_symbol = @{ (kebab_symbol ~ "!"? ~ "?"? | operative_symbol) ~ "'"? }
-kebab_symbol = @{!keyword ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-" )* }
+external_symbol  = @{ kebab_symbol ~ "/" ~ local_symbol }
+local_symbol     = @{ (kebab_symbol ~ "!"? ~ "?"? | operative_symbol) }
+mut_symbol       = @{ (kebab_symbol ~ "!"? ~ "?"? | operative_symbol) ~ "'" }
+kebab_symbol     = @{ !keyword ~ ('a'..'z' | 'A'..'Z') ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
 
-dontcare = { "_" }
-atom           = @{ ":" ~ ('a'..'z' | 'A'..'Z' ) ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
-float           = @{ "-"? ~ ('0'..'9')* ~ "." ~ ('0'..'9')+ | ('0'..'9')+ ~ "." ~ ('0'..'9')* }
-integer        = @{ "-"? ~ ('0'..'9')+ }
+dontcare =  { "_" }
+atom     = @{ ":" ~ ('a'..'z' | 'A'..'Z') ~ ('a'..'z' | 'A'..'Z' | '0'..'9' | "-")* }
+float    = @{ "-"? ~ ('0'..'9')* ~ "." ~ ('0'..'9')+ | ('0'..'9')+ ~ "." ~ ('0'..'9')* }
+integer  = @{ "-"? ~ ('0'..'9')+ }
 
 string         = ${ "\"" ~ string_content ~ "\"" }
 string_content = @{ char* }
-char = {
+char           =  {
     !("\"" | "\\") ~ ANY
-    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
-    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+  | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+  | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
 }
 
-bool           =  { "true" | "false" }
-nil            =  { "nil" }
+bool = { "true" | "false" }
+nil  = { "nil" }
 
-assingment_list = { "#(" ~ associations ~ ")" }
+assingment_list     = { "#(" ~ associations ~ ")" }
 mut_assingment_list = { "#'(" ~ mut_associations ~ ")" }
-export_list     = { "@(" ~ local_symbol* ~ ")" }
-associations     = { association* }
-mut_associations     = { mut_association* }
-association      = { local_symbol ~ form ~ description? }
-mut_association      = { mut_symbol ~ form }
-description = { "\"" ~ description_content ~ "\"" }
-description_content = {(!"\"" ~ ANY)*}
+export_list         = { "@(" ~ local_symbol* ~ ")" }
+associations        = { association* }
+mut_associations    = { mut_association* }
+association         = { local_symbol ~ form ~ description? }
+mut_association     = { mut_symbol ~ form }
+description         = { "\"" ~ description_content ~ "\"" }
+description_content = { (!"\"" ~ ANY)* }
 
 array_list = { "[" ~ forms ~ "]" }
 
@@ -80,16 +77,16 @@ macrodef   = { "[(" ~ (parameters ~ "->")? ~ form ~ ")" }
 call       = { "(" ~ callable ~ forms ~ ")" }
 infix_call = { ":(" ~ form ~ form ~ form ~ ")" }
 callable   = { form }
-scope = { "{" ~ forms ~ "}" }
+scope      = { "{" ~ forms ~ "}" }
 
-captures  = { symbol* }
+captures   = { symbol* }
 parameters = { local_symbol* }
 
-vaca_import   = { "<{" ~ alias ~ path ~ ("->" ~ symbols)?~ "}>" }
+vaca_import = { "<{" ~ alias ~ path ~ ("->" ~ symbols)? ~ "}>" }
 
-symbols = { local_symbol* }
-alias = { local_symbol }
-path = { symbol }
+symbols =  { local_symbol* }
+alias   =  { local_symbol }
+path    = @{ ('a'..'z' | 'A'..'Z' | '0'..'9' | "_" | "-" | "/")+ }
 
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
 COMMENT    = _{ ";;" ~ (!";;" ~ ANY)* ~ ";;" | ";" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
