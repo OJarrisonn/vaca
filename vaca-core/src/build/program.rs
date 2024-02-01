@@ -15,7 +15,7 @@ impl Program {
         Self { externals, forms }
     }
 
-    pub fn forms(self) -> Vec<Form> {
-        self.forms
+    pub fn forms(&self) -> &Vec<Form> {
+        &self.forms
     }
 }
