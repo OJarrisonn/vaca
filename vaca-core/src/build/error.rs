@@ -26,12 +26,12 @@ impl Display for BuildErrorStack {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             BuildErrorStack::Top { src, msg } => {
-                writeln!(f, "Caused by: {src}")?;
+                writeln!(f, "Caused at: {src}")?;
                 write!(f, "Due to {msg}")
             },
             BuildErrorStack::Stream { from, src, note } => {
                 writeln!(f, "{from}")?;
-                write!(f, "Caused by: {src}")?;
+                write!(f, "Caused at: {src}")?;
                 match note {
                     Some(note) => write!(f, "\n{note}"),
                     None => write!(f, "")
