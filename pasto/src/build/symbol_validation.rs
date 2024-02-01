@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use vaca_core::build::{error::BuildErrorStack, form::{function::Function, Expr, Form}, symbol::Symbol};
+use vaca_core::build::{error::BuildErrorStack, form::{function::Function, Expr, Form, macros::Macro}, symbol::Symbol};
 
 use crate::BuildResult;
 
@@ -13,7 +13,7 @@ pub fn validate_form(track: &mut TrackTable, form: &Form) -> BuildResult<()> {
         Expr::AssignmentList(list) => validate_assingment_list(track, form, list),
         Expr::Scope(forms) => validate_forms(track, form, forms),
         Expr::Function(function) => validate_function(track, form, function),
-        Expr::Macro(_) => todo!(),
+        Expr::Macro(macrodef) => validate_macro(track, form, macrodef),
         Expr::Call(_) => todo!(),
         Expr::Array(_) => todo!(),
         _ => Ok(())
@@ -79,32 +79,8 @@ fn validate_forms(track: &mut TrackTable, form: &Form, forms: &Vec<Form>) -> Bui
 
 /// Takes a function and validates its captures and its body
 fn validate_function(track: &mut TrackTable, form: &Form, function: &Function) -> BuildResult<()> {
-    let captures = function.captures();
     let parameters = function.parameters();
     let body= function.body();
-
-    let cres = if let Some(captures) = captures {
-        let mut errs = captures.iter()
-            .map(|symbol| track.validate(symbol))
-            .filter(Result::is_err)
-            .collect::<Vec<_>>();
-
-        if errs.is_empty() {
-            Ok(())
-        } else if errs.len() == 1{
-            Err(BuildErrorStack::Stream { from: Box::new(errs.pop().unwrap().unwrap_err()), src: form.span().to_string(), note: None })
-        } else {
-            Err(BuildErrorStack::MultiStream { 
-                from: errs.into_iter()
-                    .map(|err| Box::new(err.unwrap_err()) as Box<dyn Error>)
-                    .collect(), 
-                src: form.span().to_string(), 
-                note: None 
-            })
-        }
-    } else {
-        Ok(())
-    };
 
     // Fake evaluate the body
     track.create_scope();
@@ -114,12 +90,23 @@ fn validate_function(track: &mut TrackTable, form: &Form, function: &Function) -
 
     track.drop_scope();
 
-    match (cres, bres) {
-        (Ok(_), Ok(_)) => Ok(()),
-        (Ok(_), Err(berr)) => Err(berr),
-        (Err(cerr), Ok(_)) => Err(cerr),
-        (Err(cerr), Err(berr)) => Err(BuildErrorStack::MultiStream { from: vec![Box::new(cerr), Box::new(berr)], src: form.span().to_string(), note: None })
-    }
+    bres.map_err(|err| BuildErrorStack::Stream { from: Box::new(err), src: form.span().to_string(), note: Some("Use of undefined symbols in the macro body".into()) })
+}
+
+/// Takes a macro and validates its body
+fn validate_macro(track: &mut TrackTable, form: &Form, macrodef: &Macro) -> BuildResult<()> {
+    let parameters = macrodef.parameters();
+    let body= macrodef.body();
+
+    // Fake evaluate the body
+    track.create_scope();
+    parameters.iter().for_each(|p| { let _ = track.assign(p); });
+
+    let bres = validate_form(track, body);
+
+    track.drop_scope();
+
+    bres.map_err(|err| BuildErrorStack::Stream { from: Box::new(err), src: form.span().to_string(), note: Some("Use of undefined symbols in the macro body".into()) })
 }
 
 
