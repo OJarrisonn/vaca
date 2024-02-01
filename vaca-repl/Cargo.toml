@@ -11,4 +11,3 @@ envconfig = "0.10.0"
 rustyline = { version = "13.0.0", features = ["derive"] }
 vaca-core ={ path = "../vaca-core" }
 vaca-stl = { path = "../vaca-stl" }
-vaca-build ={ path = "../vaca-build" }

@@ -13,5 +13,3 @@ envconfig = "0.10.0"
 
 vaca-core ={ path = "../vaca-core" }
 vaca-repl ={ path = "../vaca-repl"}
-vaca-build ={ path = "../vaca-build" }
-vaca-vm ={ path = "../vaca-vm"}

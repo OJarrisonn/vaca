@@ -3,9 +3,7 @@ resolver = "2"
 members = [
     "vaca",
     "vaca-core",
-    "vaca-build",
     "vaca-repl",
-    "vaca-vm",
     "vaca-stl",
     "pasto","chifre","casco","vacavm"
 ]
