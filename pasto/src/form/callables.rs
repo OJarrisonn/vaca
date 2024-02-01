@@ -7,14 +7,12 @@ use super::{literals::parse_symbols, parse_form, parse_forms};
 pub fn parse_function(function: Pair<Rule>) -> Expr {
     let parts = function.into_inner();
 
-    let mut captures = None;
     let mut parameters = None;
 
     for part in parts {
         match part.as_rule() {
-            Rule::captures => captures = Some(parse_symbols(part)),
             Rule::parameters => parameters = Some(parse_symbols(part)),
-            Rule::form => return Expr::Function(Function::new(captures, parameters, parse_form(part.into_inner().next().unwrap()))),
+            Rule::form => return Expr::Function(Function::new(capturesparameters, parse_form(part.into_inner().next().unwrap()))),
             _ => unreachable!()
         }
     }
