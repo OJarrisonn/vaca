@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use vaca_core::build::{error::BuildErrorStack, form::{function::Function, Expr, Form, macros::Macro}, symbol::Symbol};
+use vaca_core::build::{error::BuildErrorStack, form::{function::Function, Expr, Form, macros::Macro, call::Call}, symbol::Symbol};
 
 use crate::BuildResult;
 
@@ -14,7 +14,7 @@ pub fn validate_form(track: &mut TrackTable, form: &Form) -> BuildResult<()> {
         Expr::Scope(forms) => validate_forms(track, form, forms),
         Expr::Function(function) => validate_function(track, form, function),
         Expr::Macro(macrodef) => validate_macro(track, form, macrodef),
-        Expr::Call(_) => todo!(),
+        Expr::Call(call) => validate_call(track, form, call),
         Expr::Array(_) => todo!(),
         _ => Ok(())
     }
@@ -109,6 +109,8 @@ fn validate_macro(track: &mut TrackTable, form: &Form, macrodef: &Macro) -> Buil
     bres.map_err(|err| BuildErrorStack::Stream { from: Box::new(err), src: form.span().to_string(), note: Some("Use of undefined symbols in the macro body".into()) })
 }
 
-
+fn validate_call(track: &mut TrackTable, form: &Form, call: &Call) -> BuildResult<()> {
+    todo!()
+}
 
 
