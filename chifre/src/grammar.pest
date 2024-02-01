@@ -72,14 +72,13 @@ description_content = { (!"\"" ~ ANY)* }
 
 array_list = { "[" ~ forms ~ "]" }
 
-function   = { "<(" ~ (captures ~ ":")? ~ (parameters ~ "->")? ~ form ~ ")" }
+function   = { "<(" ~ (parameters ~ "->")? ~ form ~ ")" }
 macrodef   = { "[(" ~ (parameters ~ "->")? ~ form ~ ")" }
 call       = { "(" ~ callable ~ forms ~ ")" }
 infix_call = { ":(" ~ form ~ form ~ form ~ ")" }
 callable   = { form }
 scope      = { "{" ~ forms ~ "}" }
 
-captures   = { symbol* }
 parameters = { local_symbol* }
 
 vaca_import = { "<{" ~ alias ~ path ~ ("->" ~ symbols)? ~ "}>" }
