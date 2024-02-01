@@ -41,38 +41,6 @@ impl Macro {
         self.arity
     }
 
-    /*pub fn exec(&self, table: &mut SymbolTable, source_forms: LinkedList<Form>) -> Result<ValueRef, RunErrorStack> {
-        if self.arity != 0 && self.arity < source_forms.len() {
-            return Err(RunErrorStack::Top { 
-                src: None, 
-                msg: format!("Too many arguments passed to macro call, expected {}, but got {}", self.arity, source_forms.len()) 
-            });
-        } else if self.arity > source_forms.len() {
-            return Ok(ValueRef::own(Value::Macro(self.partial(source_forms))));
-        }
-
-        let mut forms = self.partials.clone();
-        forms.extend(source_forms.into_iter());
-        
-        table.create_scope();
-
-        let res = match &self.body {
-            MacroBody::Defined(def) => {
-                let mut def = def.clone();
-                for (s, f) in zip(self.params.as_ref().unwrap(), forms) {
-                    def = def.replace_symbol(s, &f);
-                }
-                
-                def.eval(table)
-            },
-            MacroBody::Native(nat) => nat(table, forms),
-        };
-
-        table.drop_scope();
-
-        return res;
-    }*/
-
     fn partial(&self, forms: LinkedList<Form>) -> Self {
         let mut applied = self.clone();
         applied.arity -= forms.len();
