@@ -63,7 +63,7 @@ impl TrackTable {
             self.scopes.front_mut().unwrap().insert(symbol.clone());
             Ok(())
         } else {
-            Err(BuildErrorStack::Top { src: symbol.to_string(), msg: format!("attempt to reassign immutable symbol {}", symbol) })
+            Err(BuildErrorStack::Top { src: symbol.to_string(), msg: format!("attempt to reassign immutable symbol `{}`", symbol) })
         }
     }
 
@@ -74,9 +74,9 @@ impl TrackTable {
             Ok(())
         } else {
             Err(BuildErrorStack::Top { src: symbol.to_string(), msg: if symbol.is_mutable() {
-                    format!("attempt to use undefined mutable symbol {symbol}. Remember that mutable symbols aren't accessible in inner scopes.")
+                    format!("attempt to use undefined mutable symbol `{symbol}`. Remember that mutable symbols aren't accessible in inner scopes.")
                 } else {
-                    format!("attemp to use undefined symbol {symbol}.")
+                    format!("attemp to use undefined symbol `{symbol}`.")
                 }})
         }
     }
