@@ -25,6 +25,10 @@ pub fn build_program(program: BuildProgram) -> BuildResult<RunProgram> {
     todo!()
 }
 
+pub fn validate_program(program: &BuildProgram) -> BuildResult<()> {
+    symbol_validation::validate_program(program)
+}
+
 /// Temporary function to load the stl symbols into the TrackTable
 fn populate_track(track: &mut TrackTable) {
     let stl = ["+", "-", "*", "/", "^", "map", "reduce", "fold", "scan", "filter", "append", "prepend", "pop-back", "pop-front", "print", "println", "readln", "format"];
