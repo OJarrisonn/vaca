@@ -12,7 +12,7 @@ pub fn parse_function(function: Pair<Rule>) -> Expr {
     for part in parts {
         match part.as_rule() {
             Rule::parameters => parameters = Some(parse_symbols(part)),
-            Rule::form => return Expr::Function(Function::new(capturesparameters, parse_form(part.into_inner().next().unwrap()))),
+            Rule::form => return Expr::Function(Function::new(parameters, parse_form(part.into_inner().next().unwrap()))),
             _ => unreachable!()
         }
     }
