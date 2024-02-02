@@ -1,6 +1,5 @@
 use chifre::Rule;
 use pest::iterators::Pair;
-use rustc_hash::FxHashMap;
 use vaca_core::build::program::Program;
 
 use crate::{form::parse_forms, BuildResult};
@@ -9,7 +8,7 @@ use crate::{form::parse_forms, BuildResult};
 /// This output isn't runtime-ready
 /// Imports are completly ignored
 pub fn parse_program((_imports, forms): (Pair<Rule>, Pair<Rule>)) -> BuildResult<Program> {
-    Ok(Program::new(FxHashMap::default(), parse_forms(forms)))
+    Ok(Program::new(parse_forms(forms)))
 }
 
 #[cfg(test)]
