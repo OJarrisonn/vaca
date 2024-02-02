@@ -1,12 +1,11 @@
 use std::{fmt::Display, iter::zip};
 
-use crate::build::form::Form;
-
-use self::{function::Function, macros::Macro, array::Array};
+use self::{array::Array, function::Function, macros::Macro, object::Object};
 
 pub mod function;
 pub mod macros;
 pub mod array;
+pub mod object;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -18,10 +17,9 @@ pub enum Value {
     Char(char),
     String(String),
     Array(Array),
+    Object(Object),
     Function(Function),
     Macro(Macro),
-    /// Action are values whose evaluation has side-effects
-    Action(Form)
 }
 
 impl Into<Array> for Value {
@@ -52,9 +50,9 @@ impl Value {
             Value::Char(c) => *c != '\0',
             Value::String(s) => s.len() != 0,
             Value::Array(a) => a.len() != 0,
+            Value::Object(o) => !o.is_empty(),
             Value::Function(_) => false,
             Value::Macro(_) => false,
-            Value::Action(_) => false, // TODO: Force the eval of Actions
         }
     }
 }
@@ -73,10 +71,14 @@ impl Display for Value {
                 .reduce(|acc, f| format!("{acc}{f}"))
                 .unwrap_or(String::from(""))
             ),
+            Self::Object(o) => format!(":{{ {}}}", o.iter()
+                .map(|(k, v)| format!("{}: {} ", k, v.as_ref()))
+                .reduce(|acc, f| format!("{acc}{f}"))
+                .unwrap_or(String::from(""))
+            ),
             Self::Function(f) => format!("'func\\{}", f.arity()),
             Self::Macro(m) => format!("'macro\\{}", m.arity()),
             Self::String(s) => s.clone(),
-            Self::Action(a) => format!("'action:{}", a.span())
         })
     }
 }
@@ -115,6 +117,9 @@ impl PartialEq for Value {
                     zip(l0, r0).all(|(l, r)| l.as_ref() == r.as_ref())
                 }
             },
+            (Self::Object(l0), Self::Object(r0)) => {
+                l0 == r0
+            }
             _ => false//core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }
