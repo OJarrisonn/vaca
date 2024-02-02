@@ -1,7 +1,5 @@
 use std::{error::Error, fmt::Display};
 
-use super::form::Span;
-
 #[derive(Debug)]
 pub struct LexError(pub String);
 
