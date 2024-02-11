@@ -23,6 +23,7 @@ mod tests {
         let program = lex_program(source);
         assert!(program.is_ok());
         let program = parse_program(program.unwrap());
+        dbg!(&program);
         assert!(program.is_ok());
     }
 }
