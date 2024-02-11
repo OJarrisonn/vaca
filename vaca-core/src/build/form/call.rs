@@ -1,11 +1,9 @@
-use speedy::{Readable, Writable};
-
 use super::Form;
 
-#[derive(Debug, Clone, Readable, Writable)]
+#[derive(Debug, Clone)]
 pub struct Call {
-    callable: Box<Form>, 
-    arguments: Vec<Form>
+    pub callable: Box<Form>, 
+    pub arguments: Vec<Form>
 }
 
 impl Call {

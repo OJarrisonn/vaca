@@ -1,5 +1,7 @@
 use std::{fmt::Display, iter::zip};
 
+use crate::build::atom::Atom;
+
 use self::{array::Array, function::Function, macros::Macro, object::Object};
 
 pub mod function;
@@ -20,6 +22,7 @@ pub enum Value {
     Object(Object),
     Function(Function),
     Macro(Macro),
+    Atom(Atom)
 }
 
 impl Into<Array> for Value {
@@ -53,6 +56,15 @@ impl Value {
             Value::Object(o) => !o.is_empty(),
             Value::Function(_) => false,
             Value::Macro(_) => false,
+            Value::Atom(a) => a == &Atom::from(":true"),
+        }
+    }
+
+    pub fn is_nil(&self) -> bool {
+        if let Value::Nil = self {
+            true
+        } else {
+            false
         }
     }
 }
@@ -79,6 +91,7 @@ impl Display for Value {
             Self::Function(f) => format!("'func\\{}", f.arity()),
             Self::Macro(m) => format!("'macro\\{}", m.arity()),
             Self::String(s) => s.clone(),
+            Self::Atom(a) => a.to_string()
         })
     }
 }
@@ -119,7 +132,8 @@ impl PartialEq for Value {
             },
             (Self::Object(l0), Self::Object(r0)) => {
                 l0 == r0
-            }
+            },
+            (Self::Atom(l0), Self::Atom(r0)) => l0 == r0,
             _ => false//core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }

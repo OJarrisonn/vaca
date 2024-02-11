@@ -1,14 +1,12 @@
-use speedy::{Readable, Writable};
-
 use crate::build::symbol::Symbol;
 
 use super::Form;
 
-#[derive(Debug, Clone, Readable, Writable)]
+#[derive(Debug, Clone)]
 
 pub struct Function {
-    parameters: Vec<Symbol>, 
-    body: Box<Form>
+    pub parameters: Vec<Symbol>, 
+    pub body: Box<Form>
 }
 
 impl Function {

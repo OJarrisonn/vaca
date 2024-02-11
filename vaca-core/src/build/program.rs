@@ -1,9 +1,7 @@
-use speedy::{Readable, Writable};
-
 use super::form::Form;
 
 /// The buildtime generated Program with the imported Libraries and its body
-#[derive(Debug, Readable, Writable)]
+#[derive(Debug)]
 pub struct Program {
     forms: Vec<Form>
 }

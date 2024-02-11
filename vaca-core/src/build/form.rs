@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use speedy::{Readable, Writable};
+use crate::run::valueref::ValueRef;
 
 use self::{assignment::Assignment, call::Call, function::Function, macros::Macro};
 
@@ -11,19 +11,20 @@ pub mod function;
 pub mod macros;
 pub mod call;
 
-#[derive(Debug, Clone, Readable, Writable)]
+// TODO: Made them serializable
+#[derive(Debug, Clone)]
 pub struct Form {
-    expr: Expr,
-    span: Span
+    pub expr: Expr,
+    pub span: Span
 }
 
-#[derive(Debug, Clone, Readable, Writable)]
+#[derive(Debug, Clone)]
 pub struct Span {
     src: String,
     pos: (usize, usize)
 }
 
-#[derive(Debug, Clone, Readable, Writable)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     Nil,
     Integer(i64),
@@ -38,6 +39,7 @@ pub enum Expr {
     Macro(Macro),
     Call(Call),
     Array(Vec<Form>),
+    Capture(ValueRef)
 }
 
 impl Form {
@@ -50,6 +52,13 @@ impl Form {
     }
     pub fn expr(&self) -> &Expr {
         &self.expr
+    }
+
+    pub fn into_expr(self) -> Expr {
+        self.expr
+    }
+    pub fn into_span(self) -> Span {
+        self.span
     }
 }
 
@@ -65,6 +74,12 @@ impl From<pest::Span<'_>> for Span {
             pos: value.start_pos().line_col(),
             src: value.as_str().into()
         }
+    }
+}
+
+impl From<&'_ str> for Span {
+    fn from(value: &'_ str) -> Self {
+        Span { src: value.into(), pos: (0, 0) }
     }
 }
 
