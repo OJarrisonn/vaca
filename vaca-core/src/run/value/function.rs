@@ -1,20 +1,18 @@
-use std::sync::{Arc, RwLock};
-
-use crate::{build::{form::Form, symbol::Symbol}, run::{error::RunErrorStack, table::SymbolTable, valueref::ValueRef}};
+use crate::{build::{form::Form, symbol::Symbol}, run::{error::RunErrorStack, table::SymbolTableStack, valueref::ValueRef}};
 
 use super::array::Array;
 
 #[derive(Debug, Clone)]
 pub struct Function {
-    arity: usize,
-    params: Vec<Symbol>,
-    partials: Vec<ValueRef>,
-    body: Option<Form>,
-    native: Option<NativeFunction>
+    pub arity: usize,
+    pub params: Vec<Symbol>,
+    pub partials: Vec<ValueRef>,
+    pub body: Option<Form>,
+    pub native: Option<NativeFunction>
 }
 
 /// The function call takes care of passing the return value to the previous ownership scope
-pub type NativeFunction = fn(Arc<RwLock<SymbolTable>>) -> Result<ValueRef, RunErrorStack>;
+pub type NativeFunction = fn(&mut SymbolTableStack) -> Result<ValueRef, RunErrorStack>;
 
 impl Function {
     pub fn new(params: Vec<Symbol>, body: Form) -> Self {

@@ -1,6 +1,6 @@
 use std::{collections::LinkedList, sync::{Arc, RwLock}};
 
-use crate::{build::{form::Form, symbol::Symbol}, run::{error::RunErrorStack, table::SymbolTable, valueref::ValueRef}};
+use crate::{build::{form::Form, symbol::Symbol}, run::{error::RunErrorStack, table::SymbolTableTree, valueref::ValueRef}};
 
 #[derive(Debug, Clone)]
 pub struct Macro {
@@ -16,10 +16,10 @@ enum MacroBody {
     Native(NativeMacro)
 }
 
-pub type NativeMacro = fn(Arc<RwLock<SymbolTable>>, Vec<Form>) -> Result<ValueRef, RunErrorStack>;
+pub type NativeMacro = fn(Arc<RwLock<SymbolTableTree>>, Vec<Form>) -> Result<ValueRef, RunErrorStack>;
 
 impl Macro {
-    pub fn defined(params: Vec<Symbol>, body: Form) -> Self {
+    pub fn new(params: Vec<Symbol>, body: Form) -> Self {
         Self {
             arity: params.len(), 
             params: Some(params),
