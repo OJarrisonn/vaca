@@ -2,12 +2,13 @@ use std::{fmt::Display, iter::zip};
 
 use crate::build::atom::Atom;
 
-use self::{array::Array, function::Function, macros::Macro, object::Object};
+use self::{array::Array, external::External, function::Function, macros::Macro, object::Object};
 
 pub mod function;
 pub mod macros;
 pub mod array;
 pub mod object;
+pub mod external;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -22,7 +23,8 @@ pub enum Value {
     Object(Object),
     Function(Function),
     Macro(Macro),
-    Atom(Atom)
+    Atom(Atom),
+    External(External)
 }
 
 impl Into<Array> for Value {
@@ -54,9 +56,10 @@ impl Value {
             Value::String(s) => s.len() != 0,
             Value::Array(a) => a.len() != 0,
             Value::Object(o) => !o.is_empty(),
-            Value::Function(_) => false,
-            Value::Macro(_) => false,
+            Value::Function(_) => true,
+            Value::Macro(_) => true,
             Value::Atom(a) => a == &Atom::from(":true"),
+            Value::External(_) => true,
         }
     }
 
@@ -91,7 +94,11 @@ impl Display for Value {
             Self::Function(f) => format!("'func\\{}", f.arity()),
             Self::Macro(m) => format!("'macro\\{}", m.arity()),
             Self::String(s) => s.clone(),
-            Self::Atom(a) => a.to_string()
+            Self::Atom(a) => a.to_string(),
+            Self::External(External { lib, symbol, kind, arity, is_action: _}) => match kind {
+                external::ExternalKind::Function => format!("'func::{lib}::{symbol}\\{arity}"),
+                external::ExternalKind::Macro => format!("'macro::{lib}::{symbol}\\{arity}"),
+            }
         })
     }
 }

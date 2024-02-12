@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 vaca-core ={ path = "../vaca-core" }
+rustc-hash = "1.1.0"

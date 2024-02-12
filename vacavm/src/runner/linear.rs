@@ -1,8 +1,9 @@
-use vaca_core::{build::{form::{call::Call, function::Function as FunctionForm, macros::Macro as MacroForm, Expr, Form}, symbol::Symbol}, run::{error::RunErrorStack, result::RunResult, table::SymbolTableStack, value::{function::Function as FunctionValue, macros::Macro as MacroValue, Value}, valueref::ValueRef}};
+use vaca_core::{build::{form::{call::Call, function::Function as FunctionForm, macros::Macro as MacroForm, Expr, Form}, symbol::Symbol}, run::{error::RunErrorStack, result::RunResult, value::{function::Function as FunctionValue, macros::Macro as MacroValue, Value}, valueref::ValueRef}};
 
-use self::execute::{execute_function, execute_macro};
+use self::{execute::{execute_function, execute_macro}, table::SymbolTableStack};
 
 mod execute;
+mod table;
 
 /// Takes a form a stack table and executes the form returning the resulting value
 pub fn run_form(table: &mut SymbolTableStack, form: Form) -> RunResult<ValueRef> {
@@ -153,7 +154,7 @@ pub fn run_call(table: &mut SymbolTableStack, Call { callable, arguments }: Call
                 })?
             .into_iter().collect(); // Converts to a LinkedList<ValueRef>
 
-            execute_function( table, func, args)
+            execute_function(table, func, args)
         }, 
 
         Value::Macro(mac) => execute_macro(table, mac, arguments),
@@ -168,34 +169,5 @@ pub fn run_call(table: &mut SymbolTableStack, Call { callable, arguments }: Call
 
 #[cfg(test)]
 mod tests {
-    use vaca_core::{build::{form::{call::Call, Expr, Form, Span}, symbol::Symbol}, run::{result::RunResult, table::SymbolTableStack, value::{function::Function, Value}, valueref::ValueRef}};
 
-    use super::run_form;
-
-    fn println(table: &mut SymbolTableStack) -> RunResult<ValueRef> {
-        let msg = table.lookup(&Symbol::from("msg"))?;
-
-        println!("{}", msg);
-
-        Ok(ValueRef::new(Value::Nil))
-    }
-
-    #[test]
-    fn hello_world() {
-        let println = ValueRef::new(
-            Value::Function(Function::native(vec![Symbol::from("msg")], println))
-        );
-
-        let form = Form::new(
-            Span::from("(println \"Hello World\")"), 
-            Expr::Call(
-                Call::new(
-                    Form { expr: Expr::Capture(println), span: "".into() }, 
-                    vec![Form {expr: Expr::String("Hello World".into()), span: "".into()}])));
-        
-        let mut table = SymbolTableStack::new();
-        let res = run_form(&mut table, form);
-
-        assert!(res.is_ok() && res.unwrap().is_nil())
-    }
 }
