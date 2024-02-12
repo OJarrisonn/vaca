@@ -1,4 +1,4 @@
-use crate::{build::{form::Form, symbol::Symbol}, run::{error::RunErrorStack, table::SymbolTableStack, valueref::ValueRef}};
+use crate::{build::{form::Form, symbol::Symbol}, run::valueref::ValueRef};
 
 use super::array::Array;
 
@@ -7,12 +7,8 @@ pub struct Function {
     pub arity: usize,
     pub params: Vec<Symbol>,
     pub partials: Vec<ValueRef>,
-    pub body: Option<Form>,
-    pub native: Option<NativeFunction>
+    pub body: Form,
 }
-
-/// The function call takes care of passing the return value to the previous ownership scope
-pub type NativeFunction = fn(&mut SymbolTableStack) -> Result<ValueRef, RunErrorStack>;
 
 impl Function {
     pub fn new(params: Vec<Symbol>, body: Form) -> Self {
@@ -20,18 +16,7 @@ impl Function {
             arity: params.len(), 
             params,
             partials: vec![],
-            body: Some(body),
-            native: None
-        }
-    }
-
-    pub fn native(params: Vec<Symbol>, native: NativeFunction) -> Self {
-        Self { 
-            arity: params.len(), 
-            params, 
-            partials: vec![],
-            body: None, 
-            native: Some(native) 
+            body
         }
     }
 
