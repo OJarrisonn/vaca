@@ -4,6 +4,7 @@ use self::{execute::{execute_function, execute_macro}, table::SymbolTableStack};
 
 mod execute;
 mod table;
+mod native;
 
 /// Takes a form a stack table and executes the form returning the resulting value
 pub fn run_form(table: &mut SymbolTableStack, form: Form) -> RunResult<ValueRef> {

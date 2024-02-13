@@ -1,11 +1,14 @@
 use std::collections::LinkedList;
 
 use rustc_hash::FxHashMap;
-use vaca_core::{build::symbol::Symbol, run::{error::RunErrorStack, result::RunResult, valueref::ValueRef}};
+use vaca_core::{build::symbol::Symbol, run::{error::RunErrorStack, external::ExternalTable, result::RunResult, valueref::ValueRef}};
+
+use super::native::NativeObject;
 
 #[derive(Debug)] 
 pub struct SymbolTableStack {
-    stack: LinkedList<FxHashMap<Symbol, Entry>>
+    stack: LinkedList<FxHashMap<Symbol, Entry>>,
+    externals: FxHashMap<String, ExternalTable<NativeObject>>
 }
 
 #[derive(Debug)]
@@ -16,7 +19,7 @@ struct Entry {
 
 impl SymbolTableStack {
     pub fn new() -> Self {
-        Self { stack: LinkedList::new() }
+        Self { stack: LinkedList::new(), externals: FxHashMap::default() }
     }
 
     pub fn create_scope(&mut self) {
