@@ -1,0 +1,5 @@
+(defmod hello-world 
+  :main
+  :using (stl.io println) 
+  :as (defn main () Void 
+        :as (println "Hello World")))
