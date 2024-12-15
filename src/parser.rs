@@ -5,6 +5,7 @@ pub mod form;
 pub mod keyword;
 pub mod literal;
 pub mod list;
+pub mod map;
 pub mod symbol;
 
 pub trait Parseable: Sized {
