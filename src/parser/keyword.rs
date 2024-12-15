@@ -2,7 +2,7 @@ use super::Parseable;
 
 
 /// `stl.macro/Keyword`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct Keyword {
     pub namespace: Option<String>,
     pub name: String,

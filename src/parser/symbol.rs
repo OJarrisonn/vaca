@@ -1,7 +1,7 @@
 use super::Parseable;
 
 /// `stl.macro/Symbol`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct Symbol {
     pub namespace: Option<String>,
     pub name: String,

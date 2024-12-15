@@ -3,7 +3,7 @@ use ordered_float::OrderedFloat;
 use super::Parseable;
 
 /// `stl.macro/Literal`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub enum Literal {
     String(StringLiteral),
     Char(CharLiteral),
@@ -11,6 +11,12 @@ pub enum Literal {
     Int(IntLiteral),
     Float(FloatLiteral),
     Nil(NilLiteral),
+}
+
+impl Default for Literal {
+    fn default() -> Self {
+        Literal::Nil(NilLiteral)
+    }
 }
 
 impl Parseable for Literal {
@@ -40,7 +46,7 @@ impl Parseable for Literal {
 }
 
 /// `stl.macro/StringLiteral`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct StringLiteral {
     pub value: String,
 }
@@ -62,7 +68,7 @@ impl Parseable for StringLiteral {
 }
 
 /// `stl.macro/CharLiteral`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct CharLiteral {
     pub value: char,
 }
@@ -84,7 +90,7 @@ impl Parseable for CharLiteral {
 }
 
 /// `stl.macro/BoolLiteral`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct BoolLiteral {
     pub value: bool,
 }
@@ -106,7 +112,7 @@ impl Parseable for BoolLiteral {
 }
 
 /// `stl.macro/IntLiteral`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct IntLiteral {
     pub value: i64,
 }
@@ -128,7 +134,7 @@ impl Parseable for IntLiteral {
 }
 
 /// `stl.macro/FloatLiteral`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct FloatLiteral {
     pub value: OrderedFloat<f64>,
 }
@@ -150,7 +156,7 @@ impl Parseable for FloatLiteral {
 }
 
 /// `stl.macro/NilLiteral`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct NilLiteral;
 
 impl Parseable for NilLiteral {

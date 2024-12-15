@@ -3,7 +3,7 @@ use edn_format::Value;
 use super::{form::Form, Parseable};
 
 /// `stl.macro/Array`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct Array {
     pub forms: Vec<Form>,
 }

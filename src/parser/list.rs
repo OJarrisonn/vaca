@@ -1,7 +1,7 @@
 use super::{form::Form, Parseable};
 
 /// `stl.macro/List`
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
 pub struct List {
     pub forms: Vec<Form>,
 }

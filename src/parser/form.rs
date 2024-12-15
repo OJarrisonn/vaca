@@ -1,15 +1,20 @@
 use edn_format::Value;
 
-use super::{array::Array, keyword::Keyword, list::List, literal::Literal, module::Module, symbol::Symbol, Parseable};
+use super::{array::Array, keyword::Keyword, list::List, literal::Literal, symbol::Symbol, Parseable};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub enum Form {
     Literal(Literal),
     Keyword(Keyword),
     List(List),
     Array(Array),
-    Module(Module),
     Symbol(Symbol),
+}
+
+impl Default for Form {
+    fn default() -> Self {
+        Form::List(List::default())
+    }
 }
 
 impl Parseable for Form {
@@ -24,8 +29,6 @@ impl Parseable for Form {
             Ok(Form::List(List::parse(value)?))
         } else if Array::accept(&value) {
             Ok(Form::Array(Array::parse(value)?))
-        } else if Module::accept(&value) {
-            Ok(Form::Module(Module::parse(value)?))
         } else if Symbol::accept(&value) {
             Ok(Form::Symbol(Symbol::parse(value)?))
         } else {
@@ -34,7 +37,7 @@ impl Parseable for Form {
     }
 
     fn accept(value: &Value) -> bool {
-        Literal::accept(value) || Keyword::accept(value) || List::accept(value) || Module::accept(value) || Symbol::accept(value)
+        Literal::accept(value) || Keyword::accept(value) || List::accept(value) || Array::accept(value) || Symbol::accept(value)
     }
 }
 
