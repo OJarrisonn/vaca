@@ -1,5 +1,6 @@
 use edn_format::Value;
 
+pub mod array;
 pub mod form;
 pub mod keyword;
 pub mod literal;
