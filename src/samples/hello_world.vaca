@@ -1,5 +1,4 @@
-(defmod hello-world 
-  :main
-  :using (stl.io println) 
-  :as (defn main () Void 
+(defapp hello-world 
+  :using [(stl.io println)] 
+  :main (fn () Void 
         :as (println "Hello World")))

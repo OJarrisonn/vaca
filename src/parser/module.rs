@@ -2,6 +2,7 @@ use edn_format::{Symbol, Value};
 
 use super::Parseable;
 
+#[derive(Debug)]
 pub struct Module {
     pub name: Symbol,
     pub imports: Vec<Symbol>,
